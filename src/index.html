@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Class Equations</title>
+<link rel="stylesheet" href="../node_modules/katex/dist/katex.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-name">Class Equations</span><span class="brand-meta">Notebook</span></div>
+  <nav class="subjects" aria-label="Subjects">
+    <button class="subject" data-subject="math" aria-pressed="true">Math</button>
+    <button class="subject" data-subject="ee" aria-pressed="false">Electrical Engineering</button>
+    <button class="subject" data-subject="cs" aria-pressed="false">Computer Science</button>
+  </nav>
+  <div class="topbar-actions"><button class="btn btn-ghost" data-new>Add equation</button></div>
+</header>
+<div id="notice" class="notice" role="status" hidden></div>
+<div class="workspace">
+  <aside class="library" aria-label="Equation library">
+    <div class="library-head"><span id="library-title" class="library-title">Math</span><span class="library-count" id="library-count">0</span></div>
+    <input class="input" id="search" type="search" aria-label="Search equations" placeholder="Search equations">
+    <select class="select" id="class-filter" aria-label="Filter by class"><option value="">All classes</option></select>
+    <ul class="library-list" id="library-list"></ul>
+    <p class="library-empty" id="library-empty">No equations here yet.</p>
+    <div class="library-footer"><p class="library-note" id="storage-note">Saved on this computer.</p>
+      <div class="library-tools"><button class="btn btn-ghost btn-sm" id="import">Import</button><button class="btn btn-ghost btn-sm" id="export">Export</button></div>
+    </div>
+  </aside>
+  <main class="page-wrap">
+    <div class="tabs" role="tablist" aria-label="Worksheet mode">
+      <button role="tab" id="tab-equation" class="tab" aria-selected="true" aria-controls="panel-equation">Equation</button>
+      <button role="tab" id="tab-system" class="tab" aria-selected="false" aria-controls="panel-system" tabindex="-1">System of equations</button>
+      <button role="tab" id="tab-editor" class="tab" aria-selected="false" aria-controls="panel-editor" tabindex="-1">Add equation</button>
+    </div>
+    <section class="sheet" id="panel-equation" role="tabpanel" aria-labelledby="tab-equation">
+      <div class="sheet-inner" id="equation-sheet" hidden>
+        <p class="crumbs" id="eq-context"></p>
+        <div class="title-row"><h1 class="sheet-title" id="eq-name"></h1><button class="btn btn-ghost btn-sm" id="edit">Edit</button><button class="btn btn-ghost btn-sm" id="duplicate">Duplicate</button></div>
+        <div class="formula" id="eq-formula" aria-label="Selected equation"></div>
+        <div class="solve-row"><label for="solve-for">Solve for</label><select id="solve-for" class="select"></select><span class="muted solve-hint">Enter the known values below.</span></div>
+        <div class="vars" id="var-rows"></div>
+        <p class="unit-note muted">Use consistent units. Unit labels do not convert values. Angles are in radians.</p>
+        <details class="numerical"><summary>Numerical solving</summary><label><input type="checkbox" id="single-numeric"> Find a root from a starting guess</label><div class="guesses" id="single-guesses"></div><p class="muted">Use when symbolic solving cannot return a value. Other roots may exist.</p></details>
+        <div class="actions"><button class="btn btn-primary" id="solve-btn">Solve</button><button class="btn btn-ghost" data-cancel hidden>Cancel</button><button class="btn btn-ghost" id="clear-values">Clear values</button></div>
+        <div class="result" id="single-result" role="status" aria-live="polite">Choose an unknown and enter the known values.</div>
+      </div>
+      <div class="sheet-inner sheet-empty" id="equation-empty"><p class="crumbs">Your equation notebook</p><h1 class="sheet-title" id="empty-title">Math</h1><p class="muted">Add your first equation. Its variables will become input fields automatically.</p><button class="btn btn-primary" data-new>Add equation</button></div>
+    </section>
+    <section class="sheet" id="panel-system" role="tabpanel" aria-labelledby="tab-system" hidden>
+      <div class="sheet-inner">
+        <h1 class="sheet-title">System of equations</h1><p class="muted">Choose your equations, connect their variables, then select the unknowns.</p>
+        <ol class="slots" id="slots"></ol><button class="btn btn-ghost btn-sm" id="add-slot">Add equation slot</button>
+        <details id="mapping"><summary>Shared variables</summary><p class="muted">Matching symbols are shared across equations. Rename a symbol here if it represents a different quantity.</p><div id="mappings"></div></details>
+        <fieldset class="unknowns"><legend>Solve for</legend><div class="unknown-list" id="unknown-list"></div></fieldset>
+        <div class="vars" id="system-vars"></div><p class="muted unit-note">Use consistent units across all equations. Unit labels do not convert values.</p>
+        <details class="numerical"><summary>Numerical solving</summary><label><input type="checkbox" id="system-numeric"> Find a root from starting guesses</label><div class="guesses" id="system-guesses"></div><p class="muted">Numerical results depend on the guesses; other roots may exist.</p></details>
+        <div class="actions"><button class="btn btn-primary" id="solve-system">Solve system</button><button class="btn btn-ghost" data-cancel hidden>Cancel</button></div>
+        <div class="result" id="system-result" role="status" aria-live="polite">Select at least two equations to begin.</div>
+      </div>
+    </section>
+    <section class="sheet" id="panel-editor" role="tabpanel" aria-labelledby="tab-editor" hidden>
+      <form class="sheet-inner editor" id="editor-form" autocomplete="off">
+        <h1 class="sheet-title" id="editor-title">Add equation</h1><p class="muted">Write the formula once. Choose which variable to solve for whenever you use it.</p>
+        <div class="field-grid">
+          <div class="field"><label for="ed-name">Name</label><input id="ed-name" class="input" maxlength="150" required></div>
+          <div class="field"><label for="ed-subject">Subject</label><select id="ed-subject" class="select"><option value="math">Math</option><option value="ee">Electrical Engineering</option><option value="cs">Computer Science</option></select></div>
+          <div class="field"><label for="ed-class">Class <span class="muted">(optional)</span></label><input id="ed-class" class="input" maxlength="100"></div>
+        </div>
+        <div class="field"><label for="ed-formula">Formula</label><textarea id="ed-formula" class="input mono" rows="3" spellcheck="false" maxlength="3000" required aria-describedby="syntax-help"></textarea><p id="syntax-help" class="muted">Use one equals sign, explicit <code>*</code> for multiplication, <code>/</code> for division and <code>^</code> for powers. Parentheses or square brackets set the grouping.</p>
+        <details><summary>Supported notation</summary><p class="muted">Functions: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, sqrt, exp, log, ln, abs. Constants: pi, e, i. Variable names start with a letter and can include numbers or underscores. These function and constant names are reserved. The formula uses plain math notation; LaTeX is generated for display.</p></details></div>
+        <div class="field"><span class="label">Preview</span><div class="formula formula-sm" id="ed-preview" aria-live="polite"><span class="muted">Your formatted equation will appear here.</span></div></div>
+        <div class="field"><span class="label">Variables</span><p class="muted">Detected from your formula. Descriptions, display notation and unit labels are optional.</p><div class="table-scroll"><table class="var-table" id="ed-vars"><thead><tr><th>Symbol</th><th>Display (LaTeX)</th><th>Unit</th><th>Description</th><th>Domain</th></tr></thead><tbody></tbody></table></div></div>
+        <div class="actions"><button type="submit" class="btn btn-primary" id="save">Save equation</button><button type="button" class="btn btn-ghost" id="editor-clear">New equation</button><button type="button" class="btn btn-ghost danger" id="delete" hidden>Delete</button></div>
+        <p id="editor-status" role="status" class="muted">Saved locally. Export your library to use it on another computer.</p>
+      </form>
+    </section>
+  </main>
+</div>
+<script src="../node_modules/katex/dist/katex.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

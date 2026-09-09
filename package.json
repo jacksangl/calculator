@@ -1,0 +1,24 @@
+{
+  "name": "class-equations",
+  "productName": "Class Equations",
+  "version": "0.1.0",
+  "description": "An offline equation notebook for your classes",
+  "author": "Jack Sangl",
+  "license": "UNLICENSED",
+  "main": "electron/main.cjs",
+  "config": { "forge": "./forge.config.cjs" },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "setup:solver": "node scripts/solver.cjs setup",
+    "build:solver": "node scripts/solver.cjs build",
+    "package": "npm run build:solver && electron-forge package",
+    "make": "npm run build:solver && electron-forge make"
+  },
+  "dependencies": { "katex": "0.18.7" },
+  "devDependencies": {
+    "electron": "44.3.0",
+    "@electron-forge/cli": "7.11.2",
+    "@electron-forge/maker-zip": "7.11.2"
+  }
+}

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notebook · Class Equations</title>
+<link rel="stylesheet" href="../vendor/node_modules/katex/dist/katex.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-name">Class Equations</span>
+    <span class="brand-meta">Notebook · UI preview</span>
+  </div>
+  <nav class="subjects" aria-label="Subjects">
+    <button type="button" class="subject" data-subject="math" aria-pressed="false">Math</button>
+    <button type="button" class="subject" data-subject="ee" aria-pressed="true">Electrical Engineering</button>
+    <button type="button" class="subject" data-subject="cs" aria-pressed="false">Computer Science</button>
+  </nav>
+  <div class="topbar-actions">
+    <button type="button" class="btn btn-ghost" data-open-editor>Add equation</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <aside class="library" aria-label="Equation library">
+    <div class="library-head">
+      <span id="library-title" class="library-title">Electrical Engineering</span>
+      <span class="library-count" id="library-count">1 draft</span>
+    </div>
+    <ul class="library-list" id="library-list" role="listbox" aria-labelledby="library-title"></ul>
+    <p class="library-empty" id="library-empty" hidden>No equations here yet. Use <strong>Add equation</strong> to start a draft.</p>
+    <p class="library-note">Library lives in memory for this preview. Nothing is saved.</p>
+  </aside>
+
+  <main class="page-wrap">
+
+    <div class="tabs" role="tablist" aria-label="Worksheet mode">
+      <button type="button" role="tab" id="tab-equation" class="tab" aria-selected="true" aria-controls="panel-equation">Equation</button>
+      <button type="button" role="tab" id="tab-system" class="tab" aria-selected="false" aria-controls="panel-system">System of equations</button>
+      <button type="button" role="tab" id="tab-editor" class="tab" aria-selected="false" aria-controls="panel-editor">Add equation</button>
+    </div>
+
+    <!-- EQUATION WORKSHEET -->
+    <section class="sheet" id="panel-equation" role="tabpanel" aria-labelledby="tab-equation">
+      <div class="sheet-inner" id="equation-sheet">
+        <p class="crumbs"><span id="eq-subject">Electrical Engineering</span> <span class="sep">/</span> <span id="eq-class">ECE 311 · Devices</span></p>
+        <h1 class="sheet-title" id="eq-name">Triode current</h1>
+        <p class="draft-flag"><span class="tag tag-yellow">Your draft · grouping unconfirmed</span> <span class="muted">Not verified. Shown exactly as entered.</span></p>
+
+        <div class="formula" id="eq-formula" aria-label="Formula"></div>
+
+        <div class="solve-row">
+          <label for="solve-for">Solve for</label>
+          <select id="solve-for" class="select"></select>
+          <span class="muted solve-hint">The chosen unknown is left blank and marked below.</span>
+        </div>
+
+        <div class="vars" id="var-rows"></div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-primary" id="solve-btn" disabled aria-describedby="solve-note">Solve</button>
+          <span id="solve-note" class="muted">UI preview only. No solver is connected, so nothing is computed.</span>
+        </div>
+
+        <div class="result" aria-live="polite">
+          <span class="result-label">Result</span>
+          <span class="result-empty" id="result-empty">Empty. A result will appear here once a solver exists.</span>
+        </div>
+      </div>
+
+      <div class="sheet-inner sheet-empty" id="equation-empty" hidden>
+        <h1 class="sheet-title" id="empty-title">Math</h1>
+        <p class="muted">No equations in this subject yet.</p>
+        <button type="button" class="btn btn-ghost" data-open-editor>Add equation</button>
+      </div>
+    </section>
+
+    <!-- SYSTEM OF EQUATIONS -->
+    <section class="sheet" id="panel-system" role="tabpanel" aria-labelledby="tab-system" hidden>
+      <div class="sheet-inner">
+        <h1 class="sheet-title">System of equations</h1>
+        <p class="muted">Pick up to three equations from the library, then choose which variables to treat as unknowns. Slots are empty until you fill them.</p>
+
+        <ol class="slots" id="slots">
+          <li class="slot">
+            <label for="slot-1">Equation 1</label>
+            <select id="slot-1" class="select slot-select" data-slot="1"><option value="">Empty slot</option></select>
+            <div class="slot-preview" data-preview="1"></div>
+          </li>
+          <li class="slot">
+            <label for="slot-2">Equation 2</label>
+            <select id="slot-2" class="select slot-select" data-slot="2"><option value="">Empty slot</option></select>
+            <div class="slot-preview" data-preview="2"></div>
+          </li>
+          <li class="slot">
+            <label for="slot-3">Equation 3</label>
+            <select id="slot-3" class="select slot-select" data-slot="3"><option value="">Empty slot</option></select>
+            <div class="slot-preview" data-preview="3"></div>
+          </li>
+        </ol>
+
+        <fieldset class="unknowns">
+          <legend>Unknowns</legend>
+          <p class="muted" id="unknowns-empty">Choose at least one equation to list its variables here.</p>
+          <div class="unknown-list" id="unknown-list"></div>
+        </fieldset>
+
+        <div class="actions">
+          <button type="button" class="btn btn-primary" disabled aria-describedby="system-note">Solve system</button>
+          <span id="system-note" class="muted">UI preview only. No solver is connected.</span>
+        </div>
+
+        <div class="result">
+          <span class="result-label">Result</span>
+          <span class="result-empty">Empty. Nothing is computed in this preview.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADD EQUATION EDITOR -->
+    <section class="sheet" id="panel-editor" role="tabpanel" aria-labelledby="tab-editor" hidden>
+      <form class="sheet-inner editor" id="editor-form" autocomplete="off">
+        <h1 class="sheet-title">Add equation</h1>
+        <p class="muted">Draft only. Everything on this page lives in memory for the preview; there is no save yet.</p>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="ed-name">Name</label>
+            <input id="ed-name" type="text" class="input" required>
+          </div>
+          <div class="field">
+            <label for="ed-subject">Subject</label>
+            <select id="ed-subject" class="select">
+              <option value="math">Math</option>
+              <option value="ee" selected>Electrical Engineering</option>
+              <option value="cs">Computer Science</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ed-class">Class <span class="muted">(optional)</span></label>
+            <input id="ed-class" type="text" class="input">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ed-formula">Formula <span class="muted">(LaTeX accepted in this preview)</span></label>
+          <textarea id="ed-formula" class="input mono" rows="3" spellcheck="false"></textarea>
+        </div>
+
+        <div class="field">
+          <span class="label">Preview</span>
+          <div class="formula formula-sm" id="ed-preview" aria-live="polite">
+            <span class="muted">Type a formula above to see it typeset here.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <span class="label">Variables</span>
+            <button type="button" class="btn btn-ghost btn-sm" id="ed-add-var">Add variable</button>
+          </div>
+          <table class="var-table" id="ed-vars">
+            <thead>
+              <tr>
+                <th scope="col">Key</th>
+                <th scope="col">Display (LaTeX)</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Description</th>
+                <th scope="col"><span class="visually-hidden">Remove</span></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Add to library (preview)</button>
+          <button type="reset" class="btn btn-ghost">Clear</button>
+          <span class="muted">Adds to this session's library only.</span>
+        </div>
+      </form>
+    </section>
+
+  </main>
+</div>
+
+<template id="var-row-tpl">
+  <tr>
+    <td><input type="text" class="input mono" aria-label="Variable key"></td>
+    <td><input type="text" class="input mono" aria-label="Variable display LaTeX"></td>
+    <td><input type="text" class="input" aria-label="Unit"></td>
+    <td><input type="text" class="input" aria-label="Description"></td>
+    <td><button type="button" class="btn btn-ghost btn-sm" aria-label="Remove variable">Remove</button></td>
+  </tr>
+</template>
+
+<script src="../vendor/node_modules/katex/dist/katex.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
