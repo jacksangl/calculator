@@ -60,7 +60,7 @@ $('#class-filter').addEventListener('change', renderLibrary);
 function variableRows(container, vars, unknowns, values, changed) {
   container.replaceChildren(...vars.map(v => {
     const row = node('div', `var-row${unknowns.has(v.key) ? ' is-unknown' : ''}`);
-    const symbol = node('label', 'var-sym'); tex(symbol, v.tex || v.key);
+    const symbol = node('label', 'var-sym'); tex(symbol, v.tex || v.key.replace(/_(\w+)/, '_{$1}'));
     const equals = node('div', 'var-eq', '='); equals.setAttribute('aria-hidden', 'true');
     const cell = node('div');
     if (unknowns.has(v.key)) cell.append(node('span', 'var-unknown', '? unknown · solve for this'));
@@ -106,7 +106,7 @@ function captureEditorVars() {
 }
 function renderEditorVars(vars) {
   $('#ed-vars tbody').replaceChildren(...vars.map(v => {
-    const row = node('tr'); row.dataset.key = v.key; row.append(node('td', 'mono', v.key));
+    const row = node('tr'), sym = node('td', 'var-sym'); row.dataset.key = v.key; sym.title = v.key; tex(sym, v.tex || v.key.replace(/_(\w+)/, '_{$1}')); row.append(sym);
     for (const [field, label, limit] of [['tex', 'display LaTeX', 120], ['unit', 'unit', 40], ['desc', 'description', 200]]) {
       const td = node('td'), input = node('input', 'input'); input.value = v[field] || ''; input.maxLength = limit;
       input.setAttribute('aria-label', `${v.key} ${label}`); td.append(input); row.append(td);

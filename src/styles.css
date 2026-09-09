@@ -172,6 +172,7 @@ body {
 }
 .var-row:last-child { border-bottom: 0; }
 .var-sym { font-size: 20px; text-align: right; }
+td.var-sym { text-align: left; }
 .var-eq { font-family: var(--serif); font-size: 18px; color: var(--muted); text-align: center; }
 .var-meta { font-size: 12px; color: var(--muted); text-align: right; }
 .var-row.is-unknown { background: var(--yellow-bg); margin: 0 -12px; padding: 10px 12px; border-radius: 6px; border-bottom-color: transparent; }
