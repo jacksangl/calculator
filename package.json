@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "An offline equation notebook for your classes",
   "author": "Jack Sangl",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-only",
   "main": "electron/main.cjs",
   "config": { "forge": "./forge.config.cjs" },
   "scripts": {
