@@ -3,13 +3,13 @@ const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 const subjects = { math: 'Math', ee: 'Electrical Engineering', cs: 'Computer Science' };
 const api = window.calculator;
-const state = { library: [], subject: 'math', selected: null, unknown: null, values: {}, busy: false, editorId: null, editorVars: [], previewVersion: 0, slots: ['', ''], mappings: {}, systemUnknowns: new Set(), systemValues: {} };
+const state = { library: [], selected: null, unknown: null, values: {}, busy: false, editorId: null, editorVars: [], previewVersion: 0, slots: ['', ''], mappings: {}, systemUnknowns: new Set(), systemValues: {} };
 const byId = id => state.library.find(eq => eq.id === id);
 const metadata = vars => Object.fromEntries(vars.map(v => [v.key, v]));
 const tex = (element, source, display = false) => katex.render(source, element, { displayMode: display, throwOnError: false, trust: false, maxExpand: 200, maxSize: 10 });
 function node(tag, className = '', text = '') { const e = document.createElement(tag); e.className = className; e.textContent = text; return e; }
 function option(value, text) { const e = node('option', '', text); e.value = value; return e; }
-function notify(message, error = false) { $('#notice').textContent = message; $('#notice').hidden = !message; $('#notice').classList.toggle('error', error); }
+function notify(message, error = false) { $('#notice-message').textContent = message; $('#notice').hidden = !message; $('#notice').classList.toggle('error', error); }
 async function action(work) { try { return await work(); } catch (error) { notify(error.message, true); } }
 function invalidateResult(system = false) { $(`#${system ? 'system' : 'single'}-result`).textContent = 'Values changed. Solve to update the result.'; }
 function showTab(name) {
@@ -29,32 +29,30 @@ $$('.tab').forEach((tab, index, tabs) => {
   });
 });
 function renderLibrary() {
-  const subjectEquations = state.library.filter(e => e.subject === state.subject);
+  const equations = state.library;
   const previousClass = $('#class-filter').value;
-  $('#class-filter').replaceChildren(option('', 'All classes'), ...[...new Set(subjectEquations.map(e => e.klass).filter(Boolean))].sort().map(c => option(c, c)));
+  $('#class-filter').replaceChildren(option('', 'All classes'), ...[...new Set(equations.map(e => e.klass).filter(Boolean))].sort().map(c => option(c, c)));
   $('#class-filter').value = [...$('#class-filter').options].some(o => o.value === previousClass) ? previousClass : '';
   const query = $('#search').value.toLowerCase();
-  const items = subjectEquations.filter(e => (!$('#class-filter').value || e.klass === $('#class-filter').value) && `${e.name} ${e.klass} ${e.formula}`.toLowerCase().includes(query));
-  $('#library-title').textContent = subjects[state.subject];
+  const items = equations.filter(e => (!$('#class-filter').value || e.klass === $('#class-filter').value) && `${e.name} ${e.klass} ${e.formula}`.toLowerCase().includes(query));
   $('#library-count').textContent = String(items.length);
   $('#library-empty').hidden = items.length > 0;
-  $('#library-empty').textContent = subjectEquations.length ? 'No matching equations.' : 'No equations here yet.';
+  $('#library-empty').textContent = equations.length ? 'No matching equations.' : 'No equations here yet.';
   $('#library-list').replaceChildren(...items.map(eq => {
     const li = node('li'), button = node('button', 'library-item');
     button.setAttribute('aria-selected', String(eq.id === state.selected));
     button.append(node('span', '', eq.name), node('small', '', eq.klass || 'No class'));
+    button.addEventListener('contextmenu', event => { event.preventDefault(); equationMenu(eq); });
+    button.addEventListener('keydown', event => {
+      if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) { event.preventDefault(); equationMenu(eq); }
+    });
     button.addEventListener('click', () => selectEquation(eq)); li.append(button); return li;
   }));
-  $$('.subject').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.subject === state.subject)));
 }
 function selectEquation(eq) {
   state.selected = eq?.id || null; state.unknown = eq?.vars[0]?.key || null;
   renderLibrary(); renderEquation(); showTab('equation');
 }
-$$('.subject').forEach(button => button.addEventListener('click', () => {
-  state.subject = button.dataset.subject; $('#class-filter').value = ''; $('#search').value = '';
-  selectEquation(state.library.find(e => e.subject === state.subject));
-}));
 $('#search').addEventListener('input', renderLibrary);
 $('#class-filter').addEventListener('change', renderLibrary);
 function variableRows(container, vars, unknowns, values, changed) {
@@ -78,7 +76,6 @@ let equationRender = 0;
 async function renderEquation() {
   const eq = byId(state.selected), version = ++equationRender;
   $('#equation-sheet').hidden = !eq; $('#equation-empty').hidden = !!eq;
-  $('#empty-title').textContent = subjects[state.subject];
   if (!eq) return;
   $('#eq-name').textContent = eq.name; $('#eq-context').textContent = [subjects[eq.subject], eq.klass].filter(Boolean).join(' / ');
   $('#solve-for').replaceChildren(...eq.vars.map(v => option(v.key, v.key)));
@@ -118,7 +115,7 @@ function renderEditorVars(vars) {
 function openEditor(eq = null, duplicate = false) {
   state.previewVersion++; clearTimeout(previewTimer); state.editorId = duplicate ? null : eq?.id || null;
   $('#editor-form').reset(); $('#ed-name').value = eq ? eq.name + (duplicate ? ' (copy)' : '') : '';
-  $('#ed-subject').value = eq?.subject || state.subject; $('#ed-class').value = eq?.klass || ''; $('#ed-formula').value = eq?.formula || '';
+  $('#ed-subject').value = eq?.subject || 'math'; $('#ed-class').value = eq?.klass || ''; $('#ed-formula').value = eq?.formula || '';
   state.editorVars = eq?.vars.map(v => ({ ...v })) || []; renderEditorVars(state.editorVars);
   $('#editor-title').textContent = state.editorId ? 'Edit equation' : 'Add equation';
   $('#delete').hidden = !state.editorId; $('#ed-preview').textContent = 'Your formatted equation will appear here.';
@@ -154,17 +151,63 @@ $('#editor-form').addEventListener('submit', event => {
     try {
       if (!await previewEquation()) throw new Error('Correct the formula before saving.');
       const eq = { id: state.editorId || crypto.randomUUID(), name: $('#ed-name').value.trim(), subject: $('#ed-subject').value, klass: $('#ed-class').value.trim(), formula: $('#ed-formula').value.trim(), vars: captureEditorVars() };
-      const library = await api.save(eq); state.library = library.equations; state.subject = eq.subject;
+      const library = await api.save(eq); state.library = library.equations;
       $('#search').value = ''; $('#class-filter').value = ''; state.editorId = eq.id;
       renderSlots(); selectEquation(byId(eq.id)); notify('Equation saved.');
     } finally { $('#save').disabled = false; }
   });
 });
-$('#delete').addEventListener('click', () => action(async () => {
-  const library = await api.remove(state.editorId); state.library = library.equations;
-  if (!byId(state.editorId)) { openEditor(); selectEquation(state.library.find(e => e.subject === state.subject)); }
+async function deleteEquation(id) {
+  const library = await api.remove(id); state.library = library.equations;
+  if (!byId(id)) {
+    delete state.values[id];
+    if (state.editorId === id) openEditor();
+    if (state.selected === id) selectEquation(state.library[0]);
+  }
   renderLibrary(); renderSlots();
-}));
+}
+$('#delete').addEventListener('click', () => action(() => deleteEquation(state.editorId)));
+let renameId = null;
+async function equationMenu(eq) {
+  if (state.busy) return;
+  await action(async () => {
+    const choice = await api.equationMenu();
+    if (state.busy || !byId(eq.id)) return;
+    if (choice === 'delete') await deleteEquation(eq.id);
+    if (choice === 'rename') {
+      renameId = eq.id;
+      $('#rename-name').value = byId(eq.id).name;
+      $('#rename-error').textContent = '';
+      $('#rename-dialog').showModal(); $('#rename-name').select();
+    }
+  });
+}
+$('#rename-cancel').addEventListener('click', () => $('#rename-dialog').close());
+$('#rename-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const name = $('#rename-name').value.trim();
+  if (!name) { $('#rename-error').textContent = 'Enter a name.'; return; }
+  $('#rename-save').disabled = true;
+  try {
+    const eq = byId(renameId);
+    if (!eq) throw new Error('Equation not found.');
+    state.library = (await api.save({ ...eq, name })).equations;
+    renderLibrary(); renderSlots();
+    if (state.selected === renameId) $('#eq-name').textContent = name;
+    if (state.editorId === renameId) $('#ed-name').value = name;
+    $('#rename-dialog').close();
+  } catch (error) { $('#rename-error').textContent = error.message; }
+  finally { $('#rename-save').disabled = false; }
+});
+function toggleSidebar(collapsed = !$('#library').hidden) {
+  $('#library').hidden = collapsed;
+  $('.workspace').classList.toggle('sidebar-collapsed', collapsed);
+  $('#toggle-sidebar').setAttribute('aria-expanded', String(!collapsed));
+  $('#toggle-sidebar').setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+  $('#toggle-sidebar').title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+}
+$('#toggle-sidebar').addEventListener('click', () => toggleSidebar());
+$('#dismiss-notice').addEventListener('click', () => notify(''));
 
 function renderSlots() {
   $('#slots').replaceChildren(...state.slots.map((id, index) => {
@@ -266,7 +309,7 @@ async function solve(system) {
     state.busy = true; $('#solve-btn').disabled = true; $('#solve-system').disabled = true;
     $$('[data-cancel]').forEach(button => button.hidden = false);
     // Keep the equation and input snapshot stable while its result is being computed.
-    $$('input, select, textarea, .subject, .library-item, .tab, [data-new], #edit, #duplicate, #clear-values, #add-slot, #import, #export').forEach(e => e.disabled = true);
+    $$('input, select, textarea, .library-item, .tab, [data-new], #edit, #duplicate, #clear-values, #add-slot, #import, #export').forEach(e => e.disabled = true);
     resultBox.textContent = 'Solving…';
     const result = await api.solve({ equations: data.equations, metadata: metadata(data.vars), unknowns, values, guesses, numeric: $(`#${prefix}-numeric`).checked });
     showResult(resultBox, result, data.vars);
@@ -286,9 +329,9 @@ $('#import').addEventListener('click', () => action(async () => {
 }));
 $('#export').addEventListener('click', () => action(async () => { if (await api.export()) notify('Library exported.'); }));
 document.addEventListener('keydown', event => {
-  if (!(event.metaKey || event.ctrlKey) || state.busy) return;
+  if (!(event.metaKey || event.ctrlKey) || state.busy || $('#rename-dialog').open) return;
   if (event.key === 'n') { event.preventDefault(); openEditor(); }
-  if (event.key === 'f') { event.preventDefault(); $('#search').focus(); }
+  if (event.key === 'f') { event.preventDefault(); toggleSidebar(false); $('#search').focus(); }
   if (event.key === 'Enter') {
     event.preventDefault();
     if (!$('#panel-editor').hidden) $('#editor-form').requestSubmit();
@@ -298,5 +341,5 @@ document.addEventListener('keydown', event => {
 action(async () => {
   if (!api) throw new Error('Open the Electron app to use the math engine and local library. This browser page is a visual preview.');
   state.library = (await api.load()).equations;
-  renderLibrary(); renderSlots(); selectEquation(state.library.find(e => e.subject === state.subject));
+  renderLibrary(); renderSlots(); selectEquation(state.library[0]);
 });

@@ -30,6 +30,12 @@ async function checkedEquation(input) {
   if (inspected.variables.length !== eq.vars.length || inspected.variables.some(v => !metadata[v.key])) throw new Error('Variable fields must match the formula. Wait for its preview to update.');
   return eq;
 }
+handle('equation:menu', () => new Promise(resolve => {
+  Menu.buildFromTemplate([
+    { label: 'Rename…', click: () => resolve('rename') },
+    { label: 'Delete', click: () => resolve('delete') },
+  ]).popup({ window, callback: () => setImmediate(() => resolve(null)) });
+}));
 handle('library:load', async () => { await writes; return readLibrary(libraryPath()); });
 handle('library:save', input => mutate(async () => {
   const equation = await checkedEquation(input);

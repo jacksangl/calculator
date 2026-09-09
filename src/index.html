@@ -10,18 +10,13 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><span class="brand-name">Class Equations</span><span class="brand-meta">Notebook</span></div>
-  <nav class="subjects" aria-label="Subjects">
-    <button class="subject" data-subject="math" aria-pressed="true">Math</button>
-    <button class="subject" data-subject="ee" aria-pressed="false">Electrical Engineering</button>
-    <button class="subject" data-subject="cs" aria-pressed="false">Computer Science</button>
-  </nav>
+  <div class="brand"><button class="btn btn-ghost icon-button" id="toggle-sidebar" aria-label="Collapse sidebar" title="Collapse sidebar" aria-expanded="true" aria-controls="library"><span class="sidebar-icon" aria-hidden="true"></span></button><span class="brand-name">Class Equations</span><span class="brand-meta">Notebook</span></div>
   <div class="topbar-actions"><button class="btn btn-ghost" data-new>Add equation</button></div>
 </header>
-<div id="notice" class="notice" role="status" hidden></div>
+<div id="notice" class="notice" hidden><span id="notice-message" role="status"></span><button class="btn btn-ghost icon-button" id="dismiss-notice" aria-label="Dismiss notification" title="Dismiss notification">×</button></div>
 <div class="workspace">
-  <aside class="library" aria-label="Equation library">
-    <div class="library-head"><span id="library-title" class="library-title">Math</span><span class="library-count" id="library-count">0</span></div>
+  <aside id="library" class="library" aria-label="Equation library">
+    <div class="library-head"><span id="library-title" class="library-title">All equations</span><span class="library-count" id="library-count">0</span></div>
     <input class="input" id="search" type="search" aria-label="Search equations" placeholder="Search equations">
     <select class="select" id="class-filter" aria-label="Filter by class"><option value="">All classes</option></select>
     <ul class="library-list" id="library-list"></ul>
@@ -48,7 +43,7 @@
         <div class="actions"><button class="btn btn-primary" id="solve-btn">Solve</button><button class="btn btn-ghost" data-cancel hidden>Cancel</button><button class="btn btn-ghost" id="clear-values">Clear values</button></div>
         <div class="result" id="single-result" role="status" aria-live="polite">Choose an unknown and enter the known values.</div>
       </div>
-      <div class="sheet-inner sheet-empty" id="equation-empty"><p class="crumbs">Your equation notebook</p><h1 class="sheet-title" id="empty-title">Math</h1><p class="muted">Add your first equation. Its variables will become input fields automatically.</p><button class="btn btn-primary" data-new>Add equation</button></div>
+      <div class="sheet-inner sheet-empty" id="equation-empty"><p class="crumbs">Your equation notebook</p><h1 class="sheet-title" id="empty-title">All equations</h1><p class="muted">Add your first equation. Its variables will become input fields automatically.</p><button class="btn btn-primary" data-new>Add equation</button></div>
     </section>
     <section class="sheet" id="panel-system" role="tabpanel" aria-labelledby="tab-system" hidden>
       <div class="sheet-inner">
@@ -80,6 +75,14 @@
     </section>
   </main>
 </div>
+<dialog id="rename-dialog" aria-labelledby="rename-title">
+  <form id="rename-form">
+    <h2 id="rename-title">Rename equation</h2>
+    <div class="field"><label for="rename-name">Name</label><input class="input" id="rename-name" maxlength="150" required></div>
+    <p id="rename-error" class="danger" role="alert"></p>
+    <div class="actions"><button class="btn btn-primary" id="rename-save" type="submit">Save</button><button class="btn btn-ghost" id="rename-cancel" type="button">Cancel</button></div>
+  </form>
+</dialog>
 <script src="../node_modules/katex/dist/katex.min.js"></script>
 <script src="app.js"></script>
 </body>
