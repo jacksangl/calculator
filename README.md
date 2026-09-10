@@ -55,6 +55,8 @@ npm test
 npm run make
 ```
 
+`npm run test:app` launches the real Electron app twice: a UI smoke test with a stubbed bridge, then `tests/app-e2e.cjs`, which boots `electron/main.cjs` with a temporary library, solves single equations (linear, multiple roots, numerical), saves an equation through the editor, and solves linear, inconsistent, nonlinear, numerical and renamed-variable systems through the real IPC bridge and SymPy worker. It needs a display; on a Linux desktop without one in the shell, run it with `DISPLAY=:0`.
+
 The Node test runner checks parser restrictions, variable detection, exact rearrangement, linear/nonlinear systems, multiple roots, domains, zero denominators, numerical roots, cancellation, persistence, backups and corrupt-file handling. Test equations live only in tests, not the product library.
 
 The optional GitHub Actions workflow builds ZIPs on macOS arm64, Windows and Linux. It is manually triggered and has not been run remotely. These initial builds are unsigned and not notarized. Windows and Arch runtime verification remains to be done on those machines.

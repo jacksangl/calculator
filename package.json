@@ -6,20 +6,28 @@
   "author": "Jack Sangl",
   "license": "GPL-3.0-only",
   "main": "electron/main.cjs",
-  "config": { "forge": "./forge.config.cjs" },
+  "config": {
+    "forge": "./forge.config.cjs"
+  },
   "scripts": {
     "start": "electron .",
     "test": "node --test tests/*.test.cjs",
+    "test:app": "electron tests/ui-smoke.cjs && electron tests/app-e2e.cjs",
     "setup:solver": "node scripts/solver.cjs setup",
     "build:solver": "node scripts/solver.cjs build",
     "package": "npm run build:solver && electron-forge package",
     "make": "npm run build:solver && electron-forge make",
     "dmg": "npm run package && bash scripts/dmg.sh"
   },
-  "dependencies": { "katex": "0.18.7" },
+  "dependencies": {
+    "katex": "0.18.7"
+  },
   "devDependencies": {
-    "electron": "44.3.0",
     "@electron-forge/cli": "7.11.2",
-    "@electron-forge/maker-zip": "7.11.2"
+    "@electron-forge/maker-deb": "^7.11.2",
+    "@electron-forge/maker-rpm": "^7.11.2",
+    "@electron-forge/maker-zip": "7.11.2",
+    "@reforged/maker-appimage": "^5.3.1",
+    "electron": "44.3.0"
   }
 }
