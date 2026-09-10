@@ -54,7 +54,25 @@ app.whenReady().then(async () => {
     assert.equal(await run('document.querySelector("#notice").hidden'), false);
     await run('document.querySelector("#dismiss-notice").click()');
     assert.equal(await run('document.querySelector("#notice").hidden'), true);
-    console.log('UI smoke passed: all subjects, class filtering, rename, delete, sidebar, notifications.');
+    await run('document.querySelector("#ai-import").click()');
+    assert.equal(await run('document.querySelector("#ai-import-dialog").open'), true);
+    assert.equal(await run('document.querySelector("#ai-import-dialog").textContent.includes("EQUATION SCHEMA")'), false);
+    await run('document.dispatchEvent(new KeyboardEvent("keydown", { key: "n", ctrlKey: true }))');
+    assert.equal(await run('document.querySelector("#panel-editor").hidden'), true);
+    await run('Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: async text => { window.copiedPrompt = text; } }); document.querySelector("#copy-ai-prompt").click()');
+    await tick();
+    assert.equal(await run('document.querySelector("#copy-ai-prompt").textContent'), 'Copied');
+    const prompt = await run('window.copiedPrompt');
+    assert.match(prompt, /EQUATION SCHEMA/);
+    const example = JSON.parse(prompt.split('VALID EXAMPLE\n')[1].split('\n\nFINAL VALIDATION')[0]);
+    require('../electron/library.cjs').validateLibrary(example);
+    await run('Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: async () => { throw new Error("Denied"); } }); document.querySelector("#copy-ai-prompt").click()');
+    await tick();
+    assert.match(await run('document.querySelector("#ai-import-status").textContent'), /Could not copy/);
+    await run('document.querySelector("#ai-import-dialog form button").click()');
+    assert.equal(await run('document.querySelector("#ai-import-dialog").open'), false);
+    assert.equal(await run('document.activeElement.id'), 'ai-import');
+    console.log('UI smoke passed: library controls, AI import dialog, copy success/failure, prompt schema, modal shortcuts and focus.');
   } finally {
     win?.destroy();
     await fs.rm(dir, { recursive: true, force: true });

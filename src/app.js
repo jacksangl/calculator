@@ -328,8 +328,22 @@ $('#import').addEventListener('click', () => action(async () => {
   finally { $('#import').disabled = false; }
 }));
 $('#export').addEventListener('click', () => action(async () => { if (await api.export()) notify('Library exported.'); }));
+$('#ai-import').addEventListener('click', () => {
+  $('#copy-ai-prompt').textContent = 'Copy prompt';
+  $('#ai-import-status').textContent = '';
+  $('#ai-import-dialog').showModal();
+});
+$('#copy-ai-prompt').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(AI_IMPORT_PROMPT);
+    $('#copy-ai-prompt').textContent = 'Copied';
+    $('#ai-import-status').textContent = 'Prompt copied. Paste it into your favorite model.';
+  } catch {
+    $('#ai-import-status').textContent = 'Could not copy the prompt. Please try again.';
+  }
+});
 document.addEventListener('keydown', event => {
-  if (!(event.metaKey || event.ctrlKey) || state.busy || $('#rename-dialog').open) return;
+  if (!(event.metaKey || event.ctrlKey) || state.busy || $('dialog[open]')) return;
   if (event.key === 'n') { event.preventDefault(); openEditor(); }
   if (event.key === 'f') { event.preventDefault(); toggleSidebar(false); $('#search').focus(); }
   if (event.key === 'Enter') {

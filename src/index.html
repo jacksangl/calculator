@@ -23,6 +23,7 @@
     <p class="library-empty" id="library-empty">No equations here yet.</p>
     <div class="library-footer"><p class="library-note" id="storage-note">Saved on this computer.</p>
       <div class="library-tools"><button class="btn btn-ghost btn-sm" id="import">Import</button><button class="btn btn-ghost btn-sm" id="export">Export</button></div>
+      <button class="btn ai-import" id="ai-import" aria-haspopup="dialog" aria-controls="ai-import-dialog">AI import</button>
     </div>
   </aside>
   <main class="page-wrap">
@@ -83,6 +84,16 @@
     <div class="actions"><button class="btn btn-primary" id="rename-save" type="submit">Save</button><button class="btn btn-ghost" id="rename-cancel" type="button">Cancel</button></div>
   </form>
 </dialog>
+<dialog id="ai-import-dialog" aria-labelledby="ai-import-title" aria-describedby="ai-import-description">
+  <h2 id="ai-import-title">AI import</h2>
+  <p id="ai-import-description">You can use AI to assist you in your equation importing!</p>
+  <div class="ai-import-copy"><span>Copy this prompt</span><button class="btn btn-primary" id="copy-ai-prompt" type="button">Copy prompt</button></div>
+  <p>Use your favorite model to parse a PDF with your equations, look at your notebook, or even just describe your equations.</p>
+  <p>Paste the prompt into your model, add your equations, then save its JSON file and choose Import.</p>
+  <p id="ai-import-status" role="status" aria-live="polite"></p>
+  <form method="dialog"><button class="btn btn-ghost" type="submit">Close</button></form>
+</dialog>
+<script src="ai-import-prompt.js"></script>
 <script src="../node_modules/katex/dist/katex.min.js"></script>
 <script src="app.js"></script>
 </body>
