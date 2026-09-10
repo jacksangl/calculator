@@ -7,6 +7,24 @@ const { launchSolver, SolverWorker } = require('../electron/bridge.cjs');
 const { validateLibrary, readLibrary, writeLibrary } = require('../electron/library.cjs');
 const solve = (equations, unknowns, values = {}, extra = {}) => launchSolver({ operation: 'solve', equations, unknowns, values, ...extra });
 
+test('copied AI prompt example passes library and formula validation and solves correctly', async () => {
+  const source = await fs.readFile(path.join(__dirname, '../src/ai-import-prompt.js'), 'utf8');
+  const prompt = require('node:vm').runInNewContext(source + '\nAI_IMPORT_PROMPT');
+  const example = JSON.parse(prompt.split('VALID EXAMPLE\n')[1].split('\n\nFINAL VALIDATION')[0]);
+  const library = validateLibrary(example);
+  for (const equation of library.equations) {
+    const metadata = Object.fromEntries(equation.vars.map(v => [v.key, v]));
+    const inspected = await launchSolver({ operation: 'inspect', equations: [equation.formula], metadata });
+    assert.deepEqual(inspected.variables.map(v => v.key).sort(), equation.vars.map(v => v.key).sort());
+  }
+  const capacitor = library.equations[0];
+  assert.equal(capacitor.vars.find(v => v.key === 'omega').tex, '\\omega');
+  const metadata = Object.fromEntries(capacitor.vars.map(v => [v.key, v]));
+  const result = await solve([capacitor.formula], ['Z'], { omega: '1000', C: '1e-6' }, { metadata });
+  assert.equal(result.status, 'solved');
+  assert.equal(result.answers[0].variables[0].decimal, '-1000.0*I');
+});
+
 // Test-only equations: none are seeded into the application library.
 test('preview detects symbols and preserves explicit grouping; code execution is rejected', async () => {
   const result = await launchSolver({ operation: 'inspect', equations: ['q = a*(b-c)/d'] });
