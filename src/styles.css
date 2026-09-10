@@ -231,6 +231,7 @@ td.var-sym { text-align: left; }
 .unknown-list label { display: inline-flex; align-items: center; gap: 6px; font-size: 16px; }
 
 /* ---------- Editor ---------- */
+#ed-formula { resize: vertical; max-width: 100%; }
 .field { margin-bottom: 18px; }
 .field label, .field .label { display: block; font-weight: 600; margin-bottom: 6px; }
 .field-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
