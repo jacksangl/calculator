@@ -28,6 +28,8 @@ app.whenReady().then(async () => {
     const run = code => win.webContents.executeJavaScript(code);
     const tick = () => run('new Promise(resolve => setTimeout(resolve, 50))');
     await tick();
+    assert.equal(await run('document.querySelector(".brand-logo")?.getAttribute("src")'), '../assets/jotter.svg');
+    assert.equal(await run('document.querySelector(".brand-logo").complete && document.querySelector(".brand-logo").naturalWidth > 0'), true);
     assert.equal(await run('document.querySelectorAll(".library-item").length'), 3);
     assert.equal(await run('document.querySelectorAll(".subject").length'), 0);
     assert.equal(await run('document.querySelector("#class-filter").options.length'), 4);
@@ -46,8 +48,10 @@ app.whenReady().then(async () => {
     await run('document.querySelector("#toggle-sidebar").click()');
     assert.equal(await run('document.querySelector("#library").hidden'), true);
     assert.equal(await run('document.querySelector("#toggle-sidebar").getAttribute("aria-expanded")'), 'false');
+    assert.equal(await run('document.querySelector("#toggle-sidebar").getAttribute("aria-label")'), 'Expand sidebar');
     await run('document.dispatchEvent(new KeyboardEvent("keydown", { key: "f", ctrlKey: true }))');
     assert.equal(await run('document.querySelector("#library").hidden'), false);
+    assert.equal(await run('document.querySelector("#toggle-sidebar").getAttribute("aria-label")'), 'Collapse sidebar');
     assert.equal(await run('document.activeElement.id'), 'search');
     await run('document.querySelector("#export").click()');
     await tick();

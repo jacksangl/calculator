@@ -1,10 +1,10 @@
-# Class Equations
+# Jotter
 
 An offline Electron equation notebook using the selected **B / Notebook** interface. Apple Silicon macOS is the primary target; Windows and Arch Linux use the same source. A and C were removed, and all three Claude Code Fable workers have finished.
 
 ## Run
 
-The Apple Silicon application and ZIP are generated in `out/`. Open `out/Class Equations-darwin-arm64/Class Equations.app`. Python is bundled in this application; you do not need to install it separately.
+The Apple Silicon application and ZIP are generated in `out/`. `npm run dmg` builds a drag-to-Applications disk image at `out/Jotter.dmg`; it is unsigned, so the first launch needs right-click → Open. Open `out/Jotter-darwin-arm64/Jotter.app`. Python is bundled in this application; you do not need to install it separately.
 
 For development, install Node.js 24 and Python 3.12 or newer, then run:
 
@@ -14,7 +14,7 @@ npm run setup:solver
 npm start
 ```
 
-On Arch, Node.js and Python are required for development; the packaged app includes its runtimes. The ZIP contains an executable named `class-equations`. Build on the target operating system; PyInstaller cannot cross-compile its helper. Windows uses the same npm commands with Python on PATH.
+On Arch, Node.js and Python are required for development; the packaged app includes its runtimes. The ZIP contains an executable named `jotter`. Build on the target operating system; PyInstaller cannot cross-compile its helper. Windows uses the same npm commands with Python on PATH.
 
 ## Add an equation
 
@@ -40,9 +40,9 @@ The math engine starts with the app and stays warm. On the development Apple Sil
 
 Equations are saved as versioned JSON in Electron's user-data folder:
 
-- macOS: `~/Library/Application Support/class-equations/library.json`
-- Windows: `%APPDATA%/class-equations/library.json`
-- Linux: `~/.config/class-equations/library.json` (or your XDG config directory)
+- macOS: `~/Library/Application Support/Jotter/library.json`
+- Windows: `%APPDATA%/Jotter/library.json`
+- Linux: `~/.config/Jotter/library.json` (or your XDG config directory)
 
 Saves write a temporary file before replacement and retain `library.json.bak`. Corrupt libraries are reported without being overwritten. To restore the previous save, quit the app, keep a copy of the damaged file, and copy the backup to `library.json`.
 
@@ -59,7 +59,7 @@ The Node test runner checks parser restrictions, variable detection, exact rearr
 
 The optional GitHub Actions workflow builds ZIPs on macOS arm64, Windows and Linux. It is manually triggered and has not been run remotely. These initial builds are unsigned and not notarized. Windows and Arch runtime verification remains to be done on those machines.
 
-`CLASS_EQUATIONS_DATA_DIR` may point to a temporary directory for isolated development UI checks; it is ignored in packaged builds.
+`JOTTER_DATA_DIR` may point to a temporary directory for isolated development UI checks; it is ignored in packaged builds.
 
 Keyboard shortcuts: Cmd/Ctrl+N adds an equation, Cmd/Ctrl+F searches, and Cmd/Ctrl+Enter saves or solves the current worksheet.
 

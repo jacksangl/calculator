@@ -21,5 +21,5 @@ jobs:
       - run: npm run make
       - uses: actions/upload-artifact@v4
         with:
-          name: class-equations-${{ matrix.os }}
+          name: jotter-${{ matrix.os }}
           path: out/make/**/*.zip

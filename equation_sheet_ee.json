@@ -1,0 +1,433 @@
+{
+  "version": 1,
+  "equations": [
+    {
+      "id": "ee310-nmos-triode",
+      "name": "NMOS triode drain current",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "i_D = k_n * (W/L) * [(v_GS - V_tn) * v_DS - (1/2) * v_DS^2]",
+      "vars": [
+        {"key":"i_D","tex":"i_D","unit":"A","desc":"Drain current","domain":"real"},
+        {"key":"k_n","tex":"k'_n","unit":"A/V^2","desc":"NMOS process transconductance parameter","domain":"real"},
+        {"key":"W","tex":"W","unit":"m","desc":"Channel width","domain":"real"},
+        {"key":"L","tex":"L","unit":"m","desc":"Channel length","domain":"real"},
+        {"key":"v_GS","tex":"v_{GS}","unit":"V","desc":"Gate-to-source voltage","domain":"real"},
+        {"key":"V_tn","tex":"V_{tn}","unit":"V","desc":"NMOS threshold voltage","domain":"real"},
+        {"key":"v_DS","tex":"v_{DS}","unit":"V","desc":"Drain-to-source voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-nmos-saturation",
+      "name": "NMOS saturation drain current",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "i_D = (1/2) * k_n * (W/L) * (v_GS - V_tn) * (v_GS - V_tn)",
+      "vars": [
+        {"key":"i_D","tex":"i_D","unit":"A","desc":"Drain current","domain":"real"},
+        {"key":"k_n","tex":"k'_n","unit":"A/V^2","desc":"NMOS process transconductance parameter","domain":"real"},
+        {"key":"W","tex":"W","unit":"m","desc":"Channel width","domain":"real"},
+        {"key":"L","tex":"L","unit":"m","desc":"Channel length","domain":"real"},
+        {"key":"v_GS","tex":"v_{GS}","unit":"V","desc":"Gate-to-source voltage","domain":"real"},
+        {"key":"V_tn","tex":"V_{tn}","unit":"V","desc":"NMOS threshold voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-nmos-gds",
+      "name": "NMOS drain conductance",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "g_DS = k_n * (W/L) * (v_GS - V_tn)",
+      "vars": [
+        {"key":"g_DS","tex":"g_{DS}","unit":"S","desc":"Drain-to-source conductance","domain":"real"},
+        {"key":"k_n","tex":"k'_n","unit":"A/V^2","desc":"NMOS process transconductance parameter","domain":"real"},
+        {"key":"W","tex":"W","unit":"m","desc":"Channel width","domain":"real"},
+        {"key":"L","tex":"L","unit":"m","desc":"Channel length","domain":"real"},
+        {"key":"v_GS","tex":"v_{GS}","unit":"V","desc":"Gate-to-source voltage","domain":"real"},
+        {"key":"V_tn","tex":"V_{tn}","unit":"V","desc":"NMOS threshold voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-pmos-triode",
+      "name": "PMOS triode drain current",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "i_D = k_p * (W/L) * [(v_SG - abs(V_tp)) * v_SD - (1/2) * v_SD^2]",
+      "vars": [
+        {"key":"i_D","tex":"i_D","unit":"A","desc":"Drain current","domain":"real"},
+        {"key":"k_p","tex":"k'_p","unit":"A/V^2","desc":"PMOS process transconductance parameter","domain":"real"},
+        {"key":"W","tex":"W","unit":"m","desc":"Channel width","domain":"real"},
+        {"key":"L","tex":"L","unit":"m","desc":"Channel length","domain":"real"},
+        {"key":"v_SG","tex":"v_{SG}","unit":"V","desc":"Source-to-gate voltage","domain":"real"},
+        {"key":"V_tp","tex":"V_{tp}","unit":"V","desc":"PMOS threshold voltage","domain":"real"},
+        {"key":"v_SD","tex":"v_{SD}","unit":"V","desc":"Source-to-drain voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-pmos-saturation",
+      "name": "PMOS saturation drain current",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "i_D = (1/2) * k_p * (W/L) * (v_SG - abs(V_tp)) * (v_SG - abs(V_tp))",
+      "vars": [
+        {"key":"i_D","tex":"i_D","unit":"A","desc":"Drain current","domain":"real"},
+        {"key":"k_p","tex":"k'_p","unit":"A/V^2","desc":"PMOS process transconductance parameter","domain":"real"},
+        {"key":"W","tex":"W","unit":"m","desc":"Channel width","domain":"real"},
+        {"key":"L","tex":"L","unit":"m","desc":"Channel length","domain":"real"},
+        {"key":"v_SG","tex":"v_{SG}","unit":"V","desc":"Source-to-gate voltage","domain":"real"},
+        {"key":"V_tp","tex":"V_{tp}","unit":"V","desc":"PMOS threshold voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-pmos-gds",
+      "name": "PMOS drain conductance",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "g_DS = k_p * (W/L) * (v_SG - abs(V_tp))",
+      "vars": [
+        {"key":"g_DS","tex":"g_{DS}","unit":"S","desc":"Drain-to-source conductance","domain":"real"},
+        {"key":"k_p","tex":"k'_p","unit":"A/V^2","desc":"PMOS process transconductance parameter","domain":"real"},
+        {"key":"W","tex":"W","unit":"m","desc":"Channel width","domain":"real"},
+        {"key":"L","tex":"L","unit":"m","desc":"Channel length","domain":"real"},
+        {"key":"v_SG","tex":"v_{SG}","unit":"V","desc":"Source-to-gate voltage","domain":"real"},
+        {"key":"V_tp","tex":"V_{tp}","unit":"V","desc":"PMOS threshold voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-inverting-gain",
+      "name": "Inverting op-amp gain",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "A_V = -R_2/R_1",
+      "vars": [
+        {"key":"A_V","tex":"A_V","unit":"V/V","desc":"Voltage gain","domain":"real"},
+        {"key":"R_1","tex":"R_1","unit":"ohm","desc":"Input resistor","domain":"real"},
+        {"key":"R_2","tex":"R_2","unit":"ohm","desc":"Feedback resistor","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-noninverting-gain",
+      "name": "Non-inverting op-amp gain",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "A_V = 1 + R_2/R_1",
+      "vars": [
+        {"key":"A_V","tex":"A_V","unit":"V/V","desc":"Voltage gain","domain":"real"},
+        {"key":"R_1","tex":"R_1","unit":"ohm","desc":"Ground resistor","domain":"real"},
+        {"key":"R_2","tex":"R_2","unit":"ohm","desc":"Feedback resistor","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-opamp-closed-loop-gain",
+      "name": "Finite-gain closed-loop op-amp gain",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "A_V = A_1/(1 + (1 + R_2/R_1)/A_Od)",
+      "vars": [
+        {"key":"A_V","tex":"A_V","unit":"V/V","desc":"Closed-loop voltage gain","domain":"real"},
+        {"key":"A_1","tex":"A_1(ideal)","unit":"V/V","desc":"Ideal closed-loop gain","domain":"real"},
+        {"key":"R_1","tex":"R_1","unit":"ohm","desc":"Feedback network resistor","domain":"real"},
+        {"key":"R_2","tex":"R_2","unit":"ohm","desc":"Feedback network resistor","domain":"real"},
+        {"key":"A_Od","tex":"A_{Od}","unit":"V/V","desc":"Open-loop device gain","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-opamp-open-loop-frequency",
+      "name": "Op-amp open-loop frequency response",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "A_OL = A_0/(1 + i*(f/f_b))",
+      "vars": [
+        {"key":"A_OL","tex":"A_{OL}(f)","unit":"V/V","desc":"Open-loop gain","domain":"complex"},
+        {"key":"A_0","tex":"A_0","unit":"V/V","desc":"Low-frequency open-loop gain","domain":"real"},
+        {"key":"f","tex":"f","unit":"Hz","desc":"Frequency","domain":"real"},
+        {"key":"f_b","tex":"f_b","unit":"Hz","desc":"Open-loop break frequency","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-opamp-closed-loop-frequency",
+      "name": "Op-amp closed-loop frequency response",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "A_CL = A_CL_ideal/(1 + i*(f/f_3dB))",
+      "vars": [
+        {"key":"A_CL","tex":"A_{CL}(f)","unit":"V/V","desc":"Closed-loop gain","domain":"complex"},
+        {"key":"A_CL_ideal","tex":"A_{CL}(ideal)","unit":"V/V","desc":"Ideal closed-loop gain","domain":"real"},
+        {"key":"f","tex":"f","unit":"Hz","desc":"Frequency","domain":"real"},
+        {"key":"f_3dB","tex":"f_{3dB}","unit":"Hz","desc":"Closed-loop 3 dB bandwidth","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-unity-gain-frequency",
+      "name": "Op-amp unity-gain frequency",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "f_T = A_0*f_b",
+      "vars": [
+        {"key":"f_T","tex":"f_T","unit":"Hz","desc":"Unity-gain frequency","domain":"real"},
+        {"key":"A_0","tex":"A_0","unit":"V/V","desc":"Low-frequency open-loop gain","domain":"real"},
+        {"key":"f_b","tex":"f_b","unit":"Hz","desc":"Open-loop break frequency","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-unity-gain-feedback",
+      "name": "Op-amp unity-gain feedback relation",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "f_T = f_3dB*(1 + R_2/R_1)",
+      "vars": [
+        {"key":"f_T","tex":"f_T","unit":"Hz","desc":"Unity-gain frequency","domain":"real"},
+        {"key":"f_3dB","tex":"f_{3dB}","unit":"Hz","desc":"Closed-loop 3 dB bandwidth","domain":"real"},
+        {"key":"R_1","tex":"R_1","unit":"ohm","desc":"Feedback network resistor","domain":"real"},
+        {"key":"R_2","tex":"R_2","unit":"ohm","desc":"Feedback network resistor","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-slew-rate",
+      "name": "Op-amp slew rate",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "SR = abs(dvO_dt)",
+      "vars": [
+        {"key":"SR","tex":"SR","unit":"V/s","desc":"Maximum slew rate","domain":"real"},
+        {"key":"dvO_dt","tex":"dv_O/dt","unit":"V/s","desc":"Output voltage time derivative","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-input-bias-current",
+      "name": "Input bias current",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "I_B = (I_B1 + I_B2)/2",
+      "vars": [
+        {"key":"I_B","tex":"I_B","unit":"A","desc":"Input bias current","domain":"real"},
+        {"key":"I_B1","tex":"I_{B1}","unit":"A","desc":"Non-inverting input bias current","domain":"real"},
+        {"key":"I_B2","tex":"I_{B2}","unit":"A","desc":"Inverting input bias current","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-input-offset-current",
+      "name": "Input offset current",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "I_OS = abs(I_B1 - I_B2)",
+      "vars": [
+        {"key":"I_OS","tex":"I_{OS}","unit":"A","desc":"Input offset current","domain":"real"},
+        {"key":"I_B1","tex":"I_{B1}","unit":"A","desc":"Non-inverting input bias current","domain":"real"},
+        {"key":"I_B2","tex":"I_{B2}","unit":"A","desc":"Inverting input bias current","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-input-bias-current-one",
+      "name": "First input bias current from offset",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "I_B1 = I_B + I_OS/2",
+      "vars": [
+        {"key":"I_B1","tex":"I_{B1}","unit":"A","desc":"Non-inverting input bias current","domain":"real"},
+        {"key":"I_B","tex":"I_B","unit":"A","desc":"Input bias current","domain":"real"},
+        {"key":"I_OS","tex":"I_{OS}","unit":"A","desc":"Input offset current","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-input-bias-current-two",
+      "name": "Second input bias current from offset",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "I_B2 = I_B - I_OS/2",
+      "vars": [
+        {"key":"I_B2","tex":"I_{B2}","unit":"A","desc":"Inverting input bias current","domain":"real"},
+        {"key":"I_B","tex":"I_B","unit":"A","desc":"Input bias current","domain":"real"},
+        {"key":"I_OS","tex":"I_{OS}","unit":"A","desc":"Input offset current","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-nmos-output-resistance",
+      "name": "CMOS inverter NMOS output resistance",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "r_DSN = 1/(k_n*(W_n/L_n)*(V_DD - V_tn))",
+      "vars": [
+        {"key":"r_DSN","tex":"r_{DSN}","unit":"ohm","desc":"NMOS output resistance","domain":"real"},
+        {"key":"k_n","tex":"k'_n","unit":"A/V^2","desc":"NMOS process transconductance parameter","domain":"real"},
+        {"key":"W_n","tex":"W_n","unit":"m","desc":"NMOS channel width","domain":"real"},
+        {"key":"L_n","tex":"L_n","unit":"m","desc":"NMOS channel length","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"},
+        {"key":"V_tn","tex":"V_{tn}","unit":"V","desc":"NMOS threshold voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-pmos-output-resistance",
+      "name": "CMOS inverter PMOS output resistance",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "r_DSP = 1/(k_p*(W_p/L_p)*(V_DD - abs(V_tp)))",
+      "vars": [
+        {"key":"r_DSP","tex":"r_{DSP}","unit":"ohm","desc":"PMOS output resistance","domain":"real"},
+        {"key":"k_p","tex":"k'_p","unit":"A/V^2","desc":"PMOS process transconductance parameter","domain":"real"},
+        {"key":"W_p","tex":"W_p","unit":"m","desc":"PMOS channel width","domain":"real"},
+        {"key":"L_p","tex":"L_p","unit":"m","desc":"PMOS channel length","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"},
+        {"key":"V_tp","tex":"V_{tp}","unit":"V","desc":"PMOS threshold voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-switching-threshold",
+      "name": "CMOS inverter switching threshold",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "V_M = (r*(V_DD - abs(V_tp)) + V_tn)/(1 + r)",
+      "vars": [
+        {"key":"V_M","tex":"V_M","unit":"V","desc":"Inverter switching threshold","domain":"real"},
+        {"key":"r","tex":"r","unit":"1","desc":"PMOS-to-NMOS strength ratio","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"},
+        {"key":"V_tp","tex":"V_{tp}","unit":"V","desc":"PMOS threshold voltage","domain":"real"},
+        {"key":"V_tn","tex":"V_{tn}","unit":"V","desc":"NMOS threshold voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-strength-ratio",
+      "name": "CMOS inverter strength ratio",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "r = sqrt((k_p*(W_p/L_p))/(k_n*(W_n/L_n)))",
+      "vars": [
+        {"key":"r","tex":"r","unit":"1","desc":"PMOS-to-NMOS strength ratio","domain":"real"},
+        {"key":"k_p","tex":"k'_p","unit":"A/V^2","desc":"PMOS process transconductance parameter","domain":"real"},
+        {"key":"W_p","tex":"W_p","unit":"m","desc":"PMOS channel width","domain":"real"},
+        {"key":"L_p","tex":"L_p","unit":"m","desc":"PMOS channel length","domain":"real"},
+        {"key":"k_n","tex":"k'_n","unit":"A/V^2","desc":"NMOS process transconductance parameter","domain":"real"},
+        {"key":"W_n","tex":"W_n","unit":"m","desc":"NMOS channel width","domain":"real"},
+        {"key":"L_n","tex":"L_n","unit":"m","desc":"NMOS channel length","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-matched-threshold",
+      "name": "Matched CMOS inverter threshold",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "V_M = V_DD/2",
+      "vars": [
+        {"key":"V_M","tex":"V_M","unit":"V","desc":"Inverter switching threshold","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-vil",
+      "name": "CMOS inverter low input threshold",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "V_IL = (1/8)*(3*V_DD + 2*V_t)",
+      "vars": [
+        {"key":"V_IL","tex":"V_{IL}","unit":"V","desc":"Low input voltage threshold","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"},
+        {"key":"V_t","tex":"V_t","unit":"V","desc":"Matched threshold magnitude","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-vih",
+      "name": "CMOS inverter high input threshold",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "V_IH = (1/8)*(5*V_DD - 2*V_t)",
+      "vars": [
+        {"key":"V_IH","tex":"V_{IH}","unit":"V","desc":"High input voltage threshold","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"},
+        {"key":"V_t","tex":"V_t","unit":"V","desc":"Matched threshold magnitude","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-noise-margin",
+      "name": "CMOS inverter noise margins",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "NM_H = (1/8)*(3*V_DD + 2*V_t)",
+      "vars": [
+        {"key":"NM_H","tex":"NM_H","unit":"V","desc":"High noise margin","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"},
+        {"key":"V_t","tex":"V_t","unit":"V","desc":"Matched threshold magnitude","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-noise-margin-low",
+      "name": "CMOS inverter low noise margin",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "NM_L = (1/8)*(3*V_DD + 2*V_t)",
+      "vars": [
+        {"key":"NM_L","tex":"NM_L","unit":"V","desc":"Low noise margin","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"},
+        {"key":"V_t","tex":"V_t","unit":"V","desc":"Matched threshold magnitude","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-tphl",
+      "name": "CMOS inverter high-to-low propagation delay",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "t_PHL = alpha_n*C_L/(k_n*(W_n/L_n)*V_DD)",
+      "vars": [
+        {"key":"t_PHL","tex":"t_{PHL}","unit":"s","desc":"High-to-low propagation delay","domain":"real"},
+        {"key":"alpha_n","tex":"alpha_n","unit":"1","desc":"NMOS delay factor","domain":"real"},
+        {"key":"C_L","tex":"C_L","unit":"F","desc":"Load capacitance","domain":"real"},
+        {"key":"k_n","tex":"k'_n","unit":"A/V^2","desc":"NMOS process transconductance parameter","domain":"real"},
+        {"key":"W_n","tex":"W_n","unit":"m","desc":"NMOS channel width","domain":"real"},
+        {"key":"L_n","tex":"L_n","unit":"m","desc":"NMOS channel length","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-alpha-n",
+      "name": "NMOS CMOS delay factor",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "alpha_n = 2/[(7/4) - 3*V_tn/V_DD + (V_tn/V_DD)*(V_tn/V_DD)]",
+      "vars": [
+        {"key":"alpha_n","tex":"alpha_n","unit":"1","desc":"NMOS delay factor","domain":"real"},
+        {"key":"V_tn","tex":"V_{tn}","unit":"V","desc":"NMOS threshold voltage","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-tplh",
+      "name": "CMOS inverter low-to-high propagation delay",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "t_PLH = alpha_p*C_L/(k_p*(W_p/L_p)*V_DD)",
+      "vars": [
+        {"key":"t_PLH","tex":"t_{PLH}","unit":"s","desc":"Low-to-high propagation delay","domain":"real"},
+        {"key":"alpha_p","tex":"alpha_p","unit":"1","desc":"PMOS delay factor","domain":"real"},
+        {"key":"C_L","tex":"C_L","unit":"F","desc":"Load capacitance","domain":"real"},
+        {"key":"k_p","tex":"k'_p","unit":"A/V^2","desc":"PMOS process transconductance parameter","domain":"real"},
+        {"key":"W_p","tex":"W_p","unit":"m","desc":"PMOS channel width","domain":"real"},
+        {"key":"L_p","tex":"L_p","unit":"m","desc":"PMOS channel length","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-alpha-p",
+      "name": "PMOS CMOS delay factor",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "alpha_p = 2/[(7/4) - 3*abs(V_tp)/V_DD + (abs(V_tp)/V_DD)*(abs(V_tp)/V_DD)]",
+      "vars": [
+        {"key":"alpha_p","tex":"alpha_p","unit":"1","desc":"PMOS delay factor","domain":"real"},
+        {"key":"V_tp","tex":"V_{tp}","unit":"V","desc":"PMOS threshold voltage","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"}
+      ]
+    },
+    {
+      "id": "ee310-cmos-dynamic-power",
+      "name": "CMOS dynamic power dissipation",
+      "subject": "ee",
+      "klass": "EE 310",
+      "formula": "P_D = f*C_L*V_DD^2",
+      "vars": [
+        {"key":"P_D","tex":"P_D","unit":"W","desc":"Dynamic power dissipation","domain":"real"},
+        {"key":"f","tex":"f","unit":"Hz","desc":"Switching frequency","domain":"real"},
+        {"key":"C_L","tex":"C_L","unit":"F","desc":"Load capacitance","domain":"real"},
+        {"key":"V_DD","tex":"V_{DD}","unit":"V","desc":"Supply voltage","domain":"real"}
+      ]
+    }
+  ]
+}

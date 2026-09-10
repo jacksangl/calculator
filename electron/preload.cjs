@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('calculator', {
   equationMenu: call('equation:menu'),
   load: call('library:load'), save: call('library:save'), remove: call('library:delete'),
   import: call('library:import'), export: call('library:export'),
+  copy: call('clipboard:write-text'),
   inspect: call('equation:inspect'), solve: call('equation:solve'), cancel: call('equation:cancel'),
 });

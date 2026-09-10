@@ -1,8 +1,8 @@
 'use strict';
-const AI_IMPORT_PROMPT = String.raw`Convert the equations I provide (a PDF, notebook images, or a written description) into an importable Class Equations JSON library. Read all provided material carefully. Preserve the intended math, grouping, variable meanings, and units. Ask me to clarify unreadable symbols, ambiguous grouping, missing relationships, or unsupported notation before producing the final file. Do not invent equations or silently change their meaning.
+const AI_IMPORT_PROMPT = String.raw`Convert the equations I provide (a PDF, notebook images, or a written description) into an importable Jotter JSON library. Read all provided material carefully. Preserve the intended math, grouping, variable meanings, and units. Ask me to clarify unreadable symbols, ambiguous grouping, missing relationships, or unsupported notation before producing the final file. Do not invent equations or silently change their meaning.
 
 OUTPUT
-Return a UTF-8 file named class-equations.json if file creation is available. Otherwise return only the JSON text, without Markdown fences, comments, or surrounding prose, so I can save it as class-equations.json. Use strict JSON: double-quoted keys and strings, no trailing commas, no undefined, NaN, or Infinity. The root must be an object with numeric "version": 1 and an "equations" array, not a bare array or a JSON string.
+Return a UTF-8 file named jotter.json if file creation is available. Otherwise return only the JSON text, without Markdown fences, comments, or surrounding prose, so I can save it as jotter.json. Use strict JSON: double-quoted keys and strings, no trailing commas, no undefined, NaN, or Infinity. The root must be an object with numeric "version": 1 and an "equations" array, not a bare array or a JSON string.
 
 EQUATION SCHEMA
 Each equations entry is an object with these fields:

@@ -1,15 +1,22 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, clipboard } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { pathToFileURL } = require('node:url');
 const { SolverWorker } = require('./bridge.cjs');
 const { readLibrary, writeLibrary, validateEquation, validateLibrary } = require('./library.cjs');
 let window, active, inspecting;
-if (!app.isPackaged && process.env.CLASS_EQUATIONS_DATA_DIR) app.setPath('userData', path.resolve(process.env.CLASS_EQUATIONS_DATA_DIR));
+if (!app.isPackaged && process.env.JOTTER_DATA_DIR) app.setPath('userData', path.resolve(process.env.JOTTER_DATA_DIR));
 const page = pathToFileURL(path.join(__dirname, '../src/index.html')).href;
 const worker = new SolverWorker({ resources: app.isPackaged ? process.resourcesPath : undefined });
 const solver = (request, options = {}) => worker.request(request, options);
 const libraryPath = () => path.join(app.getPath('userData'), 'library.json');
+function migrateLegacyLibrary() {
+  // ponytail: one-time copy from the pre-Jotter "Class Equations" data dir; delete this once nobody is upgrading from 0.1.0.
+  const sync = require('node:fs'), legacy = path.join(app.getPath('userData'), '..', 'Class Equations', 'library.json');
+  if (sync.existsSync(libraryPath()) || !sync.existsSync(legacy)) return;
+  sync.mkdirSync(path.dirname(libraryPath()), { recursive: true });
+  sync.copyFileSync(legacy, libraryPath());
+}
 let writes = Promise.resolve();
 function mutate(work) {
   const next = writes.then(work);
@@ -56,7 +63,7 @@ handle('library:delete', id => mutate(async () => {
 handle('library:export', async () => {
   await writes;
   const data = await readLibrary(libraryPath());
-  const { canceled, filePath } = await dialog.showSaveDialog(window, { defaultPath: 'class-equations.json', filters: [{ name: 'Equation library', extensions: ['json'] }] });
+  const { canceled, filePath } = await dialog.showSaveDialog(window, { defaultPath: 'jotter.json', filters: [{ name: 'Equation library', extensions: ['json'] }] });
   if (canceled) return false;
   if (path.resolve(filePath) === path.resolve(libraryPath())) throw new Error('Choose a separate export location.');
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
@@ -78,6 +85,11 @@ handle('library:import', () => mutate(async () => {
   }
   return writeLibrary(libraryPath(), library);
 }));
+handle('clipboard:write-text', text => {
+  if (typeof text !== 'string') throw new Error('Clipboard content must be text.');
+  clipboard.writeText(text);
+  return true;
+});
 handle('equation:inspect', async input => {
   inspecting?.abort();
   const controller = inspecting = new AbortController();
@@ -91,8 +103,9 @@ handle('equation:solve', async input => {
   finally { if (active === controller) active = null; }
 });
 handle('equation:cancel', () => { active?.abort(); return true; });
+const appIcon = path.join(__dirname, `../assets/jotter_icon.${process.platform === 'win32' ? 'ico' : 'png'}`);
 function createWindow() {
-  window = new BrowserWindow({ width: 1320, height: 920, minWidth: 820, minHeight: 620, backgroundColor: '#f0eee9', title: 'Class Equations',
+  window = new BrowserWindow({ width: 1320, height: 920, minWidth: 820, minHeight: 620, backgroundColor: '#f0eee9', title: 'Jotter', icon: appIcon,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event, url) => { if (url !== page) event.preventDefault(); });
@@ -101,6 +114,8 @@ function createWindow() {
   window.loadURL(page);
 }
 app.whenReady().then(() => {
+  if (process.platform === 'darwin' && !app.isPackaged) app.dock.setIcon(appIcon);
+  migrateLegacyLibrary();
   worker.start();
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),

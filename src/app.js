@@ -4,6 +4,7 @@ const $$ = selector => [...document.querySelectorAll(selector)];
 const subjects = { math: 'Math', ee: 'Electrical Engineering', cs: 'Computer Science' };
 const api = window.calculator;
 const state = { library: [], selected: null, unknown: null, values: {}, busy: false, editorId: null, editorVars: [], previewVersion: 0, slots: ['', ''], mappings: {}, systemUnknowns: new Set(), systemValues: {} };
+const copyText = text => api?.copy ? api.copy(text) : navigator.clipboard.writeText(text);
 const byId = id => state.library.find(eq => eq.id === id);
 const metadata = vars => Object.fromEntries(vars.map(v => [v.key, v]));
 const tex = (element, source, display = false) => katex.render(source, element, { displayMode: display, throwOnError: false, trust: false, maxExpand: 200, maxSize: 10 });
@@ -289,7 +290,7 @@ function showResult(container, result, vars) {
       tex(formula, `${v?.tex || value.key} = ${value.latex}`);
       line.append(formula, node('span', 'muted', [value.decimal, v?.unit].filter(Boolean).join(' ')));
       const copy = node('button', 'btn btn-ghost btn-sm', 'Copy'); copy.setAttribute('aria-label', `Copy ${value.key} value`);
-      copy.addEventListener('click', () => action(async () => { await navigator.clipboard.writeText(value.decimal); notify(`Copied ${value.key}.`); }));
+      copy.addEventListener('click', () => action(async () => { await copyText(value.decimal); notify(`Copied ${value.key}.`); }));
       line.append(copy); container.append(line);
     }
   }
@@ -335,7 +336,7 @@ $('#ai-import').addEventListener('click', () => {
 });
 $('#copy-ai-prompt').addEventListener('click', async () => {
   try {
-    await navigator.clipboard.writeText(AI_IMPORT_PROMPT);
+    await copyText(AI_IMPORT_PROMPT);
     $('#copy-ai-prompt').textContent = 'Copied';
     $('#ai-import-status').textContent = 'Prompt copied. Paste it into your favorite model.';
   } catch {

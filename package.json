@@ -1,6 +1,6 @@
 {
-  "name": "class-equations",
-  "productName": "Class Equations",
+  "name": "jotter",
+  "productName": "Jotter",
   "version": "0.1.0",
   "description": "An offline equation notebook for your classes",
   "author": "Jack Sangl",
@@ -13,7 +13,8 @@
     "setup:solver": "node scripts/solver.cjs setup",
     "build:solver": "node scripts/solver.cjs build",
     "package": "npm run build:solver && electron-forge package",
-    "make": "npm run build:solver && electron-forge make"
+    "make": "npm run build:solver && electron-forge make",
+    "dmg": "npm run package && bash scripts/dmg.sh"
   },
   "dependencies": { "katex": "0.18.7" },
   "devDependencies": {

@@ -21,7 +21,7 @@ function validateEquation(input) {
     klass: string(input.klass || '', 'class', 100, true), formula: string(input.formula, 'formula', 3000), vars };
 }
 function validateLibrary(data) {
-  if (!data || data.version !== 1 || !Array.isArray(data.equations) || data.equations.length > 500) throw new Error('Expected a version 1 Class Equations library with at most 500 equations.');
+  if (!data || data.version !== 1 || !Array.isArray(data.equations) || data.equations.length > 500) throw new Error('Expected a version 1 Jotter library with at most 500 equations.');
   const equations = data.equations.map(validateEquation);
   if (new Set(equations.map(e => e.id)).size !== equations.length) throw new Error('Duplicate equation IDs in library.');
   return { version: 1, equations };

@@ -200,7 +200,12 @@ def handle(request):
                 if isinstance(solution_set, s.FiniteSet):
                     solution_set = s.FiniteSet(*[(v,) for v in solution_set])
             else:
-                solution_set = s.nonlinsolve(expressions, unknowns)
+                if any(expr.has(s.Abs) for expr in expressions):
+                    # nonlinsolve can drop Abs constraints and report spurious free variables.
+                    solutions = s.solve(expressions, unknowns, dict=True)
+                    solution_set = s.FiniteSet(*(tuple(row.get(v, v) for v in unknowns) for row in solutions))
+                else:
+                    solution_set = s.nonlinsolve(expressions, unknowns)
         if solution_set is s.S.EmptySet:
             return {'status': 'no-solution', 'message': 'No solution for these equations and values.'}
         if not isinstance(solution_set, s.FiniteSet):
