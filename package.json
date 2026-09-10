@@ -17,6 +17,7 @@
     "build:solver": "node scripts/solver.cjs build",
     "package": "npm run build:solver && electron-forge package",
     "make": "npm run build:solver && electron-forge make",
+    "build:linux": "node scripts/build-linux.cjs",
     "dmg": "npm run package && bash scripts/dmg.sh"
   },
   "dependencies": {
