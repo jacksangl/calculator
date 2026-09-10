@@ -68,6 +68,5 @@ Keyboard shortcuts: Cmd/Ctrl+N adds an equation, Cmd/Ctrl+F searches, and Cmd/Ct
 - `src/`: the selected notebook interface; local KaTeX rendering.
 - `electron/`: restricted IPC, local storage and solver process management.
 - `solver/engine.py`: whitelisted expression parser and SymPy solving, without evaluating user code.
-- `mockups/design-b/`: the retained visual reference, not the running application.
 
 Ordinary equations live in library data. A new mathematical operation beyond the supported function list requires a small engine change and a regression check. There is no cloud service or automatic syncing.
