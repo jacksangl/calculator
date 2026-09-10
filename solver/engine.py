@@ -212,7 +212,6 @@ def handle(request):
             return {'status': 'conditional', 'message': 'The solution is a set or requires conditions. A single value cannot be selected automatically.', 'setLatex': latex(solution_set)}
         candidates = list(solution_set)
     answers = []
-    rejected = 0
     unresolved = False
     parametric = False
     for candidate in candidates:
@@ -245,7 +244,6 @@ def handle(request):
                 unresolved = True
                 valid = False
         if not valid:
-            rejected += 1
             continue
         answers.append({'variables': [{'key': name, 'latex': latex(value), 'decimal': str(s.N(value, 12))} for name, value in zip(unknown_names, candidate)], 'residual': max(residuals, default=0)})
     if parametric:

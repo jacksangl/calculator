@@ -5,5 +5,3 @@ out/
 __pycache__/
 *.spec
 .DS_Store
-mockups/vendor/node_modules/
-mockups/logs/

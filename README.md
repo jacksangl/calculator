@@ -1,6 +1,6 @@
 # Jotter
 
-An offline Electron equation notebook using the selected **B / Notebook** interface. Apple Silicon macOS is the primary target; Windows and Arch Linux use the same source. A and C were removed, and all three Claude Code Fable workers have finished.
+An offline Electron equation notebook. Apple Silicon macOS is the primary target; Windows and Arch Linux use the same source.
 
 ## Run
 
@@ -65,7 +65,7 @@ Keyboard shortcuts: Cmd/Ctrl+N adds an equation, Cmd/Ctrl+F searches, and Cmd/Ct
 
 ## Structure
 
-- `src/`: the selected notebook interface; local KaTeX rendering.
+- `src/`: the notebook interface; local KaTeX rendering.
 - `electron/`: restricted IPC, local storage and solver process management.
 - `solver/engine.py`: whitelisted expression parser and SymPy solving, without evaluating user code.
 
