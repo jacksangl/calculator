@@ -117,7 +117,8 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin' && !app.isPackaged) app.dock.setIcon(appIcon);
   migrateLegacyLibrary();
   worker.start();
-  Menu.setApplicationMenu(Menu.buildFromTemplate([
+  // Linux renders the application menu inside the window, above Jotter's toolbar.
+  Menu.setApplicationMenu(process.platform === 'linux' ? null : Menu.buildFromTemplate([
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
     { role: 'fileMenu' }, { role: 'editMenu' }, { role: 'viewMenu' }, { role: 'windowMenu' },
   ]));
