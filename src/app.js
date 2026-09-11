@@ -295,8 +295,15 @@ function renderSlots() {
   $('#slots').replaceChildren(...state.slots.map((id, index) => {
     const li = node('li', 'slot');
     const label = node('label', '', `Equation ${index + 1}`); label.htmlFor = `slot-${index}`;
-    const select = node('select', 'select'); select.id = label.htmlFor;
-    select.append(option('', 'Choose an equation'), ...state.library.map(eq => option(eq.id, `${eq.name} · ${subjects[eq.subject]}`)));
+    const select = node('select', 'select notebook-select'); select.id = label.htmlFor;
+    dropdownOptions(select, [option('', 'Choose an equation'), ...state.library.map(eq => {
+      const item = option(eq.id, ''), formula = node('span', 'slot-formula');
+      item.setAttribute('aria-label', `${eq.name} · ${subjects[eq.subject]}`); item.append(node('span', 'slot-name', eq.name), formula);
+      const cached = latexCache.get(latexKey(eq));
+      if (cached !== undefined) tex(formula, cached);
+      else { formula.textContent = eq.formula; formulaLatex(eq).then(latex => { if (formula.isConnected) tex(formula, latex); }).catch(() => {}); }
+      return item;
+    })]);
     select.value = byId(id) ? id : ''; state.slots[index] = select.value;
     select.addEventListener('change', () => { state.slots[index] = select.value; state.mappings[index] = {}; renderSystem(); });
     li.append(label, select);
