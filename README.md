@@ -102,6 +102,18 @@ The math engine starts with the app and stays warm. On the development Apple Sil
 
 ## Library files
 
+Jotter automatically resumes the last equation or system worksheet when reopened,
+including unknowns, shared-variable mappings, entered values, and numerical starting
+guesses. It keeps one local snapshot, replacing it after 300 ms without changes and
+on normal window close. Only the last-used worksheet is kept across restarts;
+results are recalculated when you press Solve. Editor drafts are not included.
+
+The snapshot lives in Electron's local storage and is capped at 128 KiB of text
+(the storage engine has additional overhead). It stores equation IDs, not copies
+of the library, with no history or queue. Removed equations and obsolete variable
+fields are discarded on restore. If a worksheet exceeds the cap, its snapshot is
+cleared and a notice appears; equation-library saves remain independent.
+
 Equations are saved as versioned JSON in Electron's user-data folder:
 
 - macOS: `~/Library/Application Support/Jotter/library.json`
@@ -119,7 +131,11 @@ npm test
 npm run make
 ```
 
-`npm run test:app` launches the real Electron app twice: a UI smoke test with a stubbed bridge, then `tests/app-e2e.cjs`, which boots `electron/main.cjs` with a temporary library, solves single equations (linear, multiple roots, numerical), saves an equation through the editor, and solves linear, inconsistent, nonlinear, numerical and renamed-variable systems through the real IPC bridge and SymPy worker. It needs a display; on a Linux desktop without one in the shell, run it with `DISPLAY=:0`.
+`npm run test:app` starts with a UI smoke test with a stubbed bridge, then `tests/app-e2e.cjs`, which boots `electron/main.cjs` with a temporary library, solves single equations (linear, multiple roots, numerical), saves an equation through the editor, and solves linear, inconsistent, nonlinear, numerical and renamed-variable systems through the real IPC bridge and SymPy worker. It needs a display; on a Linux desktop without one in the shell, run it with `DISPLAY=:0`.
+
+It also runs `tests/worksheet-restart.cjs`, which launches three separate app
+processes with temporary storage to check worksheet recovery after quitting,
+including numerical guesses, renamed system variables, and cleared values.
 
 The Node test runner checks parser restrictions, variable detection, exact rearrangement, linear/nonlinear systems, multiple roots, domains, zero denominators, numerical roots, cancellation, persistence, backups and corrupt-file handling. Test equations live only in tests, not the product library.
 
