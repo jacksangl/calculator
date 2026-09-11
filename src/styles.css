@@ -13,7 +13,8 @@
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; scrollbar-width: none; }
+::-webkit-scrollbar { display: none; }
 html, body { margin: 0; height: 100%; }
 body {
   font-family: var(--sans);
