@@ -1,6 +1,6 @@
 # Jotter
 
-An offline Electron equation notebook. Apple Silicon macOS is the primary target; Windows and Arch Linux use the same source.
+An offline Electron equation notebook. Apple Silicon macOS is the primary target; Windows and Linux use the same source.
 
 ## Run
 
@@ -14,7 +14,71 @@ npm run setup:solver
 npm start
 ```
 
-On Arch, Node.js and Python are required for development; the packaged app includes its runtimes. The ZIP contains an executable named `jotter`. Build on the target operating system; PyInstaller cannot cross-compile its helper. Windows uses the same npm commands with Python on PATH.
+On Arch, Node.js and Python are required for development; the packaged app includes its runtimes. The Linux ZIP contains an executable named `Jotter`. Build on the target operating system; PyInstaller cannot cross-compile its helper. Windows uses the same npm commands with Python on PATH.
+
+## Build for Linux
+
+Install Node.js 24, Python 3.12 or newer, and the AppImage packaging tool:
+
+```sh
+# Arch / EndeavourOS / Omarchy
+sudo pacman -S squashfs-tools
+
+# Ubuntu / Debian (python3-venv enables Python virtual environments)
+sudo apt install squashfs-tools python3-venv
+```
+
+Then build on Linux:
+
+```sh
+npm ci
+npm run build:linux
+```
+
+Use Node.js 24 for packaging. With Node.js 26 on the development machine, Forge
+exited during extraction without creating artifacts; `build:linux` detects this
+instead of reporting a successful build.
+
+This sets up and bundles the Python solver, then creates an AppImage in
+`out/make/AppImage/<arch>/` and a ZIP in `out/make/zip/linux/<arch>/`.
+Build tools and internet access are needed when building; end users do not need
+Node.js or Python. Builds target the host CPU architecture; build separately on
+an ARM64 machine for ARM64 users.
+
+Run the AppImage with `chmod +x Jotter-*.AppImage` followed by
+`./Jotter-<version>-<arch>.AppImage`. If mounting is unavailable, try
+`./Jotter-<version>-<arch>.AppImage --appimage-extract-and-run`, or extract the
+ZIP and run `./Jotter` from its directory. A graphical Linux desktop and Electron's
+system libraries are still required. Keep Chromium's sandbox enabled; systems
+that restrict unprivileged user namespaces may need an administrator-provided
+AppArmor policy or a native installation with a correctly configured sandbox.
+
+For optional Ubuntu/Debian and Fedora/RHEL-family installers:
+
+```sh
+# Ubuntu build machine
+sudo apt install dpkg fakeroot rpm
+npm run build:linux -- --installers
+```
+
+That produces DEB and RPM files as well as AppImage and ZIP. On Arch, the
+corresponding build packages are `dpkg`, `fakeroot`, and `rpm-tools`.
+Arch users should use AppImage or ZIP, not DEB/RPM.
+
+### Distribution compatibility
+
+AppImage is the common download format, but it does not make every Linux
+installation compatible. In particular, [PyInstaller does not bundle glibc](https://pyinstaller.org/en/stable/usage.html#making-gnu-linux-apps-forward-compatible).
+A solver built on rolling-release Arch can require a newer glibc than Ubuntu has.
+For shared releases, use the **Desktop builds** workflow (Ubuntu 22.04 baseline),
+or build in an Ubuntu 22.04 VM with Python 3.12 and Node.js 24. This targets Ubuntu
+22.04 and newer and recent glibc-based distributions, including Arch; it is a
+compatibility target, not a guarantee until tested on each distribution.
+
+Older distributions, Alpine/musl, different CPU architectures, missing desktop
+libraries, and sandbox policies can require separate work. For broader runtime
+consistency, a future Flatpak package could provide a shared runtime; that is not
+implemented here. Changing to DEB/RPM alone does not fix glibc compatibility.
 
 ## Add an equation
 
@@ -59,7 +123,7 @@ npm run make
 
 The Node test runner checks parser restrictions, variable detection, exact rearrangement, linear/nonlinear systems, multiple roots, domains, zero denominators, numerical roots, cancellation, persistence, backups and corrupt-file handling. Test equations live only in tests, not the product library.
 
-The optional GitHub Actions workflow builds ZIPs on macOS arm64, Windows and Linux. It is manually triggered and has not been run remotely. These initial builds are unsigned and not notarized. Windows and Arch runtime verification remains to be done on those machines.
+The manually triggered **Desktop builds** GitHub Actions workflow builds ZIPs on macOS arm64 and Windows, and AppImage, ZIP, DEB and RPM artifacts on Ubuntu 22.04 x64. These builds are unsigned and not notarized. The updated workflow still needs a remote run; cross-distribution runtime verification is not yet complete.
 
 `JOTTER_DATA_DIR` may point to a temporary directory for isolated development UI checks; it is ignored in packaged builds.
 

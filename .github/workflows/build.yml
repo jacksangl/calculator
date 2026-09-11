@@ -4,7 +4,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-15, windows-latest, ubuntu-24.04]
+        os: [macos-15, windows-latest, ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -16,10 +16,15 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y squashfs-tools dpkg fakeroot rpm
       - run: npm run setup:solver
       - run: npm test
-      - run: npm run make
+      - if: runner.os != 'Linux'
+        run: npm run make
+      - if: runner.os == 'Linux'
+        run: npm run build:linux -- --installers
       - uses: actions/upload-artifact@v4
         with:
           name: jotter-${{ matrix.os }}
-          path: out/make/**/*.zip
+          path: out/make/**
