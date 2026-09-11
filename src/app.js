@@ -4,6 +4,29 @@ const $$ = selector => [...document.querySelectorAll(selector)];
 const subjects = { math: 'Math', ee: 'Electrical Engineering', cs: 'Computer Science' };
 const api = window.calculator;
 const state = { library: [], selected: null, unknown: null, values: {}, busy: false, editorId: null, editorVars: [], previewVersion: 0, slots: ['', ''], mappings: {}, systemUnknowns: new Set(), systemValues: {} };
+let worksheetReady = false, worksheetTimer, worksheetMode = 'equation', worksheetWarning = false;
+function scheduleWorksheetSave() {
+  if (!worksheetReady) return;
+  clearTimeout(worksheetTimer);
+  worksheetTimer = setTimeout(saveWorksheet, 300);
+}
+function saveWorksheet() {
+  clearTimeout(worksheetTimer);
+  if (!worksheetReady) return;
+  const system = worksheetMode === 'system', prefix = system ? 'system' : 'single';
+  const snapshot = {
+    version: 1, mode: worksheetMode, numeric: $(`#${prefix}-numeric`).checked,
+    guesses: Object.fromEntries($$(`#${prefix}-guesses input`).map(input => [input.dataset.key, input.value])),
+    ...(system ? { slots: state.slots, mappings: state.mappings, unknowns: [...state.systemUnknowns], values: state.systemValues }
+      : { selected: state.selected, unknown: state.unknown, values: state.values[state.selected] }),
+  };
+  try { Worksheet.write(localStorage, snapshot, state.library); worksheetWarning = false; }
+  catch (error) {
+    if (!worksheetWarning) notify(error.message.includes('too large') ? error.message : 'Could not remember this worksheet across restarts. Your equation library is saved separately.', true);
+    worksheetWarning = true;
+  }
+}
+window.addEventListener('beforeunload', saveWorksheet);
 const copyText = text => api?.copy ? api.copy(text) : navigator.clipboard.writeText(text);
 const byId = id => state.library.find(eq => eq.id === id);
 const metadata = vars => Object.fromEntries(vars.map(v => [v.key, v]));
@@ -12,8 +35,10 @@ function node(tag, className = '', text = '') { const e = document.createElement
 function option(value, text) { const e = node('option', '', text); e.value = value; return e; }
 function notify(message, error = false) { $('#notice-message').textContent = message; $('#notice').hidden = !message; $('#notice').classList.toggle('error', error); }
 async function action(work) { try { return await work(); } catch (error) { notify(error.message, true); } }
-function invalidateResult(system = false) { $(`#${system ? 'system' : 'single'}-result`).textContent = 'Values changed. Solve to update the result.'; }
+function invalidateResult(system = false) { $(`#${system ? 'system' : 'single'}-result`).textContent = 'Values changed. Solve to update the result.'; scheduleWorksheetSave(); }
 function showTab(name) {
+  if (name === 'equation' || name === 'system') worksheetMode = name;
+  scheduleWorksheetSave();
   $$('.tab').forEach(tab => {
     const selected = tab.id === `tab-${name}`;
     tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
@@ -75,6 +100,7 @@ function variableRows(container, vars, unknowns, values, changed) {
 }
 let equationRender = 0;
 async function renderEquation() {
+  scheduleWorksheetSave();
   const eq = byId(state.selected), version = ++equationRender;
   $('#equation-sheet').hidden = !eq; $('#equation-empty').hidden = !!eq;
   if (!eq) return;
@@ -244,6 +270,7 @@ function systemData() {
   return { equations, vars: [...vars.values()] };
 }
 function renderSystem() {
+  scheduleWorksheetSave();
   $('#mappings').replaceChildren();
   state.slots.forEach((id, index) => {
     const eq = byId(id); if (!eq) return;
@@ -252,6 +279,7 @@ function renderSystem() {
       const label = node('label', 'mapping-row', `${v.key} → `), input = node('input', 'input');
       input.value = state.mappings[index]?.[v.key] || v.key; input.maxLength = 40;
       input.setAttribute('aria-label', `Equation ${index + 1} shared symbol for ${v.key}`);
+      input.addEventListener('input', () => { state.mappings[index] ||= {}; state.mappings[index][v.key] = input.value.trim(); invalidateResult(true); });
       input.addEventListener('change', () => { state.mappings[index] ||= {}; state.mappings[index][v.key] = input.value.trim(); renderSystem(); });
       label.append(input); section.append(label);
     }); $('#mappings').append(section);
@@ -275,6 +303,7 @@ function renderGuesses(system) {
   const keys = system ? [...state.systemUnknowns] : [state.unknown].filter(Boolean);
   container.replaceChildren(...keys.map(key => {
     const label = node('label', 'guess-row', `${key} starting guess`), input = node('input', 'input'); input.dataset.key = key; input.value = values[key] || ''; input.setAttribute('aria-label', `${key} starting guess`);
+    input.maxLength = 200;
     input.addEventListener('input', () => invalidateResult(system)); label.append(input); return label;
   }));
   container.hidden = !$(`#${prefix}-numeric`).checked;
@@ -357,4 +386,25 @@ action(async () => {
   if (!api) throw new Error('Open the Electron app to use the math engine and local library. This browser page is a visual preview.');
   state.library = (await api.load()).equations;
   renderLibrary(); renderSlots(); selectEquation(state.library[0]);
+  let saved;
+  try { saved = Worksheet.read(localStorage, state.library); } catch { /* Storage may be unavailable. */ }
+  if (saved) {
+    const system = saved.mode === 'system', prefix = system ? 'system' : 'single';
+    $(`#${prefix}-numeric`).checked = saved.numeric;
+    if (system) {
+      state.slots = saved.slots; state.mappings = saved.mappings;
+      state.systemUnknowns = new Set(saved.unknowns); state.systemValues = saved.values;
+      renderSlots();
+    } else {
+      state.selected = saved.selected; state.unknown = saved.unknown;
+      state.values[saved.selected] = saved.values;
+      renderLibrary(); renderEquation();
+    }
+    for (const input of $(`#${prefix}-guesses`).querySelectorAll('input')) input.value = saved.guesses[input.dataset.key] || '';
+    $(`#panel-${saved.mode} .numerical`).open = saved.numeric;
+    if (system) $('#mapping').open = Object.values(saved.mappings).some(mapping => Object.keys(mapping).length);
+    showTab(saved.mode);
+  }
+  worksheetReady = true;
+  scheduleWorksheetSave();
 });

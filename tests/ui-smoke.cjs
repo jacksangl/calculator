@@ -4,9 +4,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
+const dir = require('node:fs').mkdtempSync(path.join(os.tmpdir(), 'equation-ui-'));
+app.setPath('userData', dir);
+// Let the promise report failures after window destruction and async cleanup.
+app.on('window-all-closed', () => {});
 
 app.whenReady().then(async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'equation-ui-'));
   let win;
   try {
     const preload = path.join(dir, 'preload.cjs');
@@ -58,7 +61,7 @@ app.whenReady().then(async () => {
     assert.equal(await run('document.querySelector("#notice").hidden'), false);
     await run('document.querySelector("#dismiss-notice").click()');
     assert.equal(await run('document.querySelector("#notice").hidden'), true);
-    await run('document.querySelector("#ai-import").click()');
+    await run('document.querySelector("#ai-import").focus(); document.querySelector("#ai-import").click()');
     assert.equal(await run('document.querySelector("#ai-import-dialog").open'), true);
     assert.equal(await run('document.querySelector("#ai-import-dialog").textContent.includes("EQUATION SCHEMA")'), false);
     await run('document.dispatchEvent(new KeyboardEvent("keydown", { key: "n", ctrlKey: true }))');
