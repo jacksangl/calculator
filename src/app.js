@@ -146,8 +146,16 @@ async function warmLatexCache() {
       await lastInspect;
       if (!byId(eq.id)) continue;
       try { await formulaLatex(eq); } catch { /* Left uncached; the next selection fetches it. */ }
+      paintSlotFormulas();
     }
   } finally { warming = false; }
+}
+// Slot dropdowns show plain formulas until the cache holds their LaTeX; fetching per option would cancel the active inspect.
+function paintSlotFormulas() {
+  for (const span of $$('.slot-formula:not(:has(.katex))')) {
+    const eq = byId(span.dataset.id), cached = eq && latexCache.get(latexKey(eq));
+    if (cached !== undefined) tex(span, cached);
+  }
 }
 function renderUnknown() {
   scheduleWorksheetSave();
@@ -299,11 +307,10 @@ function renderSlots() {
     dropdownOptions(select, [option('', 'Choose an equation'), ...state.library.map(eq => {
       const item = option(eq.id, ''), formula = node('span', 'slot-formula');
       item.setAttribute('aria-label', `${eq.name} · ${subjects[eq.subject]}`); item.append(node('span', 'slot-name', eq.name), formula);
-      const cached = latexCache.get(latexKey(eq));
-      if (cached !== undefined) tex(formula, cached);
-      else { formula.textContent = eq.formula; formulaLatex(eq).then(latex => { if (formula.isConnected) tex(formula, latex); }).catch(() => {}); }
+      formula.dataset.id = eq.id; formula.textContent = eq.formula;
       return item;
     })]);
+    paintSlotFormulas();
     select.value = byId(id) ? id : ''; state.slots[index] = select.value;
     select.addEventListener('change', () => { state.slots[index] = select.value; state.mappings[index] = {}; renderSystem(); });
     li.append(label, select);
