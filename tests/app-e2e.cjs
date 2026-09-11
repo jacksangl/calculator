@@ -46,7 +46,7 @@ app.whenReady().then(async () => {
   const click = selector => run(`document.querySelector(${JSON.stringify(selector)}).click()`);
   const clickText = (selector, label) => run(`[...document.querySelectorAll(${JSON.stringify(selector)})].find(e => e.textContent.trim() === ${JSON.stringify(label)}).click()`);
   const answers = selector => run(`[...document.querySelectorAll(${JSON.stringify(selector)} + " .answer-row")].map(r => r.querySelector(".muted").textContent)`);
-  const solved = selector => waitFor(`/verified solution|No solution|free variables|numerical root|did not converge/.test(document.querySelector(${JSON.stringify(selector)}).textContent)`, `result in ${selector}`).then(() => text(selector));
+  const solved = selector => waitFor(`document.querySelector(${JSON.stringify(selector)} + " .answer-row") || /No solution|free variables|did not converge/.test(document.querySelector(${JSON.stringify(selector)}).textContent)`, `result in ${selector}`).then(() => text(selector));
   const setUnknowns = async keys => {
     const labels = await run('[...document.querySelectorAll("#unknown-list input")].map(b => b.getAttribute("aria-label").slice(10))');
     for (const key of labels) await run(`{ const box = document.querySelector("#unknown-list input[aria-label='Solve for ${key}']"); if (box.checked !== ${JSON.stringify(keys.includes(key))}) box.click(); }`);
@@ -72,7 +72,7 @@ app.whenReady().then(async () => {
   await waitFor('document.querySelector("#var-rows-V") && document.querySelector("#var-rows-I") && !document.querySelector("#var-rows-R")', 'R to become the unknown');
   await type('#var-rows-V', '12'); await type('#var-rows-I', '2');
   await click('#solve-btn');
-  assert.match(await solved('#single-result'), /1 verified solution/);
+  assert.doesNotMatch(await solved('#single-result'), /verified|checked against/);
   assert.deepEqual(await answers('#single-result'), ['6.00000000000 ohm']);
   assert.equal(await run('document.querySelector("#solve-btn").disabled'), false, 'controls re-enable after solving');
   await waitFor('document.querySelector("#history-count").textContent === "1"', 'first saved calculation');
@@ -84,7 +84,7 @@ app.whenReady().then(async () => {
   await type('#var-rows-I', '1/4');
   assert.match(await text('#single-result'), /Values changed/);
   await click('#solve-btn');
-  assert.match(await solved('#single-result'), /1 verified solution/);
+  assert.doesNotMatch(await solved('#single-result'), /verified|checked against/);
   assert.deepEqual(await answers('#single-result'), ['48.0000000000 ohm']);
   passed.push('re-solve with a fraction input (R = 48 ohm)');
 
@@ -100,7 +100,7 @@ app.whenReady().then(async () => {
   await waitFor('document.querySelector("#var-rows-a")', 'square root sheet');
   await type('#var-rows-a', '9');
   await click('#solve-btn');
-  assert.match(await solved('#single-result'), /2 verified solutions/);
+  assert.match(await solved('#single-result'), /Solution 2/);
   assert.deepEqual((await answers('#single-result')).sort(), ['-3.00000000000', '3.00000000000']);
   passed.push('nonlinear single solve with two roots (x = ±3)');
 
@@ -132,7 +132,7 @@ app.whenReady().then(async () => {
   assert.equal(await run('document.querySelector("#eq-name").textContent'), "Newton's second law");
   await type('#var-rows-m', '3'); await type('#var-rows-a', '4');
   await click('#solve-btn');
-  assert.match(await solved('#single-result'), /1 verified solution/);
+  assert.doesNotMatch(await solved('#single-result'), /verified|checked against/);
   assert.deepEqual(await answers('#single-result'), ['12.0000000000']);
   passed.push('editor save persists to disk and the new equation solves (F = 12)');
 
@@ -146,7 +146,7 @@ app.whenReady().then(async () => {
   await waitFor('document.querySelector("#system-vars-V") && document.querySelector("#system-vars-P") && document.querySelectorAll("#system-vars .is-unknown").length === 2', 'system known fields');
   await type('#system-vars-V', '12'); await type('#system-vars-P', '24');
   await click('#solve-system');
-  assert.match(await solved('#system-result'), /1 verified solution/);
+  assert.doesNotMatch(await solved('#system-result'), /verified|checked against/);
   assert.deepEqual(await answers('#system-result'), ['2.00000000000 A', '6.00000000000 ohm']);
   passed.push('system solve (V=IR, P=VI → I = 2 A, R = 6 ohm)');
 
@@ -196,7 +196,7 @@ app.whenReady().then(async () => {
   await waitFor('document.querySelector("#system-vars-F") && document.querySelector("#system-vars-m")', 'F and m known');
   await type('#system-vars-F', '18'); await type('#system-vars-m', '2');
   await click('#solve-system');
-  assert.match(await solved('#system-result'), /2 verified solutions/);
+  assert.match(await solved('#system-result'), /Solution 2/);
   assert.deepEqual((await answers('#system-result')).sort(), ['-3.00000000000', '3.00000000000', '9.00000000000', '9.00000000000']);
   passed.push('nonlinear system with two solutions (x = ±3, a = 9)');
 
@@ -207,7 +207,7 @@ app.whenReady().then(async () => {
   await waitFor('document.querySelector("#system-vars-m") && document.querySelectorAll("#system-vars .is-unknown").length === 2', 'm known, x and a unknown');
   await type('#system-vars-m', '2');
   await click('#solve-system');
-  assert.match(await solved('#system-result'), /2 verified solutions/);
+  assert.match(await solved('#system-result'), /Solution 2/);
   assert.deepEqual((await answers('#system-result')).sort(), ['0', '0', '0.250000000000', '0.500000000000']);
   passed.push('system with a renamed shared variable (F→x → (x,a) = (0,0) and (1/2,1/4))');
 
@@ -271,7 +271,7 @@ app.whenReady().then(async () => {
   // A broken history file must not hide a successful solve or be silently overwritten.
   fs.writeFileSync(historyFile, '{broken');
   await click('#solve-btn');
-  assert.match(await solved('#single-result'), /1 verified solution/);
+  assert.doesNotMatch(await solved('#single-result'), /verified|checked against/);
   assert.deepEqual(await answers('#single-result'), ['48.0000000000 ohm']);
   assert.match(await text('#notice-message'), /history could not be saved/);
   assert.equal(fs.readFileSync(historyFile, 'utf8'), '{broken');

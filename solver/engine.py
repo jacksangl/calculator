@@ -250,7 +250,7 @@ def handle(request):
         return {'status': 'underdetermined', 'message': 'The equations leave free variables. Add an independent constraint or supply more known values.'}
     if not answers:
         return {'status': 'unresolved' if unresolved or numeric else 'no-solution', 'message': 'No verified solution was found.' if unresolved or numeric else 'No solution satisfies the original equations and variable domains.'}
-    return {'status': 'solved', 'answers': answers, 'numeric': bool(numeric), 'message': ('One numerical root found from your guesses; other roots may exist.' if numeric else f'{len(answers)} verified solution' + ('' if len(answers) == 1 else 's') + '. All answers are checked against the original equations.')}
+    return {'status': 'solved', 'answers': answers, 'numeric': bool(numeric), 'message': 'One numerical root found from your guesses; other roots may exist.' if numeric else ''}
 
 
 def respond(raw):

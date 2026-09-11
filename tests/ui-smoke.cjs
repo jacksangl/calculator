@@ -44,6 +44,12 @@ app.whenReady().then(async () => {
     assert.equal(await run('getComputedStyle(document.querySelector("#slot-0")).appearance'), 'base-select');
     assert.equal(await run('document.querySelectorAll("#slot-0 option .slot-formula .katex").length'), 3);
     assert.equal(await run('document.querySelector("#slot-0 option[value=\'1\']").getAttribute("aria-label")'), 'ee equation · Electrical Engineering');
+    // Adding or removing a slot re-renders the dropdowns from the cache, so their LaTeX must survive.
+    await run('document.querySelector("#add-slot").click(); [...document.querySelectorAll("#slots button")].find(b => b.textContent === "Remove").click()');
+    assert.equal(await run('document.querySelectorAll("#slot-0 option .slot-formula .katex").length'), 3);
+    // Shared-variable labels render each symbol in LaTeX.
+    await run('document.querySelector("#slot-0").value = "1"; document.querySelector("#slot-0").dispatchEvent(new Event("change"))');
+    assert.equal(await run('document.querySelectorAll("#mappings .mapping-row annotation")[1].textContent'), 'I_{d}');
     assert.equal(await run('document.querySelector("#solve-for option[value=I_d] annotation").textContent'), 'I_{d}');
     assert.equal(await run('document.querySelector("#solve-for option[value=V_gs] annotation").textContent'), 'V_{GS}');
     // The formula's LaTeX depends only on the equation, so changing the unknown must not re-inspect or flicker.

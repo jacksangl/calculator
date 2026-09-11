@@ -333,13 +333,13 @@ function renderSlots() {
       formula.dataset.id = eq.id; formula.textContent = eq.formula;
       return item;
     })]);
-    paintSlotFormulas();
     select.value = byId(id) ? id : ''; state.slots[index] = select.value;
     select.addEventListener('change', () => { state.slots[index] = select.value; state.mappings[index] = {}; renderSystem(); });
     li.append(label, select);
     if (state.slots.length > 2) { const remove = node('button', 'btn btn-ghost btn-sm', 'Remove'); remove.addEventListener('click', () => { state.slots.splice(index, 1); state.mappings = {}; renderSlots(); }); li.append(remove); }
     return li;
   }));
+  paintSlotFormulas();
   $('#add-slot').disabled = state.slots.length >= 8; renderSystem();
 }
 $('#add-slot').addEventListener('click', () => { if (state.slots.length < 8) { state.slots.push(''); renderSlots(); } });
@@ -368,7 +368,8 @@ function renderSystem() {
     const eq = byId(id); if (!eq) return;
     const section = node('div', 'mapping-section'); section.append(node('h3', '', `${index + 1}. ${eq.name}`));
     eq.vars.forEach(v => {
-      const label = node('label', 'mapping-row', `${v.key} → `), input = node('input', 'input');
+      const label = node('label', 'mapping-row'), symbol = node('span'), input = node('input', 'input');
+      tex(symbol, v.tex || v.key.replace(/_(\w+)/, '_{$1}')); label.append(symbol, node('span', 'muted', '→'));
       input.value = state.mappings[index]?.[v.key] || v.key; input.maxLength = 40;
       input.setAttribute('aria-label', `Equation ${index + 1} shared symbol for ${v.key}`);
       input.addEventListener('input', () => { state.mappings[index] ||= {}; state.mappings[index][v.key] = input.value.trim(); invalidateResult(true); });
@@ -402,7 +403,8 @@ function renderGuesses(system) {
 }
 for (const system of [false, true]) $(`#${system ? 'system' : 'single'}-numeric`).addEventListener('change', () => { renderGuesses(system); invalidateResult(system); });
 function showResult(container, result, vars) {
-  container.replaceChildren(node('div', 'result-label', 'Result'), node('p', '', result.message));
+  container.replaceChildren(node('div', 'result-label', 'Result'));
+  if (result.message) container.append(node('p', '', result.message));
   if (result.setLatex) { const equation = node('div', 'result-formula'); tex(equation, result.setLatex, true); container.append(equation); }
   for (const [index, answer] of (result.answers || []).entries()) {
     if (result.answers.length > 1) container.append(node('h3', '', `Solution ${index + 1}`));
