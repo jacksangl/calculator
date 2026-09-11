@@ -15,7 +15,7 @@ app.whenReady().then(async () => {
     const preload = path.join(dir, 'preload.cjs');
     await fs.writeFile(preload, `
       const { contextBridge } = require('electron');
-      let equations = ['math', 'ee', 'cs'].map((subject, index) => ({ id: String(index), name: subject + ' equation', subject, klass: subject + ' class', formula: 'x=1', vars: [{ key: 'x' }] }));
+      let equations = ['math', 'ee', 'cs'].map((subject, index) => ({ id: String(index), name: subject + ' equation', subject, klass: subject + ' class', formula: 'x=I_d+V_gs', vars: [{ key: 'x' }, { key: 'I_d' }, { key: 'V_gs', tex: 'V_{GS}' }] }));
       let choice = 'rename';
       contextBridge.exposeInMainWorld('calculator', {
         load: async () => ({ equations }),
@@ -36,8 +36,32 @@ app.whenReady().then(async () => {
     assert.equal(await run('document.querySelectorAll(".library-item").length'), 3);
     assert.equal(await run('document.querySelectorAll(".subject").length'), 0);
     assert.equal(await run('document.querySelector("#class-filter").options.length'), 4);
+    assert.equal(await run('getComputedStyle(document.querySelector("#class-filter")).appearance'), 'base-select');
+    assert.equal(await run('getComputedStyle(document.querySelector("#solve-for")).appearance'), 'base-select');
+    assert.equal(await run('document.querySelectorAll("#solve-for option .katex").length'), 3);
+    assert.equal(await run('document.querySelector("#solve-for option[value=I_d] annotation").textContent'), 'I_{d}');
+    assert.equal(await run('document.querySelector("#solve-for option[value=V_gs] annotation").textContent'), 'V_{GS}');
+    await run('document.querySelector("#solve-for").value = "V_gs"; document.querySelector("#solve-for").dispatchEvent(new Event("change"))');
+    assert.equal(await run('document.querySelector("#solve-for selectedcontent annotation").textContent'), 'V_{GS}');
+    assert.equal(await run('!!document.querySelector("#var-rows-I_d") && !document.querySelector("#var-rows-V_gs")'), true);
+    await win.webContents.executeJavaScript('document.querySelector("#solve-for").focus(); document.querySelector("#solve-for").showPicker()', true);
+    assert.equal(await run('document.querySelector("#solve-for").matches(":open")'), true);
+    win.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'ESCAPE' });
+    win.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'ESCAPE' });
+    await tick();
+    assert.equal(await run('document.querySelector("#solve-for").matches(":open")'), false);
+    assert.equal(await run('document.querySelector("#solve-for").value'), 'V_gs');
+    await win.webContents.executeJavaScript('document.querySelector("#solve-for").showPicker()', true);
+    for (const keyCode of ['UP', 'ENTER']) {
+      win.webContents.sendInputEvent({ type: 'keyDown', keyCode });
+      win.webContents.sendInputEvent({ type: 'keyUp', keyCode });
+    }
+    await tick();
+    assert.equal(await run('document.querySelector("#solve-for").value'), 'I_d');
+    assert.equal(await run('document.querySelector("#solve-for selectedcontent annotation").textContent'), 'I_{d}');
     await run('document.querySelector("#class-filter").value = "ee class"; document.querySelector("#class-filter").dispatchEvent(new Event("change"))');
     assert.equal(await run('document.querySelector(".library-item").textContent'), 'ee equationee class');
+    assert.equal(await run('document.querySelector("#class-filter selectedcontent").textContent'), 'ee class');
     await run('document.querySelector(".library-item").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }))');
     await tick();
     assert.equal(await run('document.querySelector("#rename-dialog").open'), true);
@@ -79,7 +103,7 @@ app.whenReady().then(async () => {
     await run('document.querySelector("#ai-import-dialog form button").click()');
     assert.equal(await run('document.querySelector("#ai-import-dialog").open'), false);
     assert.equal(await run('document.activeElement.id'), 'ai-import');
-    console.log('UI smoke passed: library controls, AI import dialog, copy success/failure, prompt schema, modal shortcuts and focus.');
+    console.log('UI smoke passed: LaTeX dropdowns, keyboard selection and dismissal, library controls, AI import dialog, copy success/failure, prompt schema, modal shortcuts and focus.');
   } finally {
     win?.destroy();
     await fs.rm(dir, { recursive: true, force: true });

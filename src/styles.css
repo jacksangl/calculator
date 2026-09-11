@@ -173,6 +173,24 @@ td.var-sym { text-align: left; }
 .input.mono { font-family: var(--mono); font-size: 13px; }
 .var-row .input { font-family: var(--mono); font-size: 14px; max-width: 320px; }
 .select { width: auto; min-width: 140px; }
+.notebook-select, .notebook-select::picker(select) { appearance: base-select; }
+.notebook-select { align-items: center; gap: 16px; cursor: pointer; }
+.notebook-select:hover { background: var(--paper); }
+.notebook-select::picker-icon { color: var(--muted); font-size: 12px; }
+.notebook-select:open::picker-icon { rotate: 180deg; }
+.notebook-select::picker(select) {
+  background: var(--paper); color: var(--ink); font: inherit;
+  border: 1px solid var(--line-strong); border-radius: 8px;
+  padding: 4px; margin-block: 5px;
+  box-shadow: 0 8px 24px rgb(31 31 29 / 14%);
+  max-height: min(320px, 60vh); overflow-y: auto;
+}
+.notebook-select option { padding: 7px 10px; gap: 10px; border-radius: 4px; cursor: pointer; overflow-wrap: anywhere; }
+.notebook-select option:checked { background: var(--yellow-bg); color: var(--yellow-ink); }
+.notebook-select option:hover, .notebook-select option:focus { background: var(--line); color: var(--ink); outline: none; }
+.notebook-select option::checkmark { order: 1; margin-inline-start: auto; }
+.notebook-select:disabled { opacity: 0.55; cursor: not-allowed; }
+.math-select .katex { font-size: 1.2em; }
 .input:focus-visible, .select:focus-visible, .btn:focus-visible, .tab:focus-visible, .library-item:focus-visible {
   outline: 2px solid var(--focus); outline-offset: 2px;
 }

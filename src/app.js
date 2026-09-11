@@ -33,6 +33,12 @@ const metadata = vars => Object.fromEntries(vars.map(v => [v.key, v]));
 const tex = (element, source, display = false) => katex.render(source, element, { displayMode: display, throwOnError: false, trust: false, maxExpand: 200, maxSize: 10 });
 function node(tag, className = '', text = '') { const e = document.createElement(tag); e.className = className; e.textContent = text; return e; }
 function option(value, text) { const e = node('option', '', text); e.value = value; return e; }
+function dropdownOptions(select, options) {
+  // Chromium's customizable select keeps native selection, keyboard and focus behavior.
+  const button = node('button'); button.type = 'button';
+  button.append(node('selectedcontent'));
+  select.replaceChildren(button, ...options);
+}
 function notify(message, error = false) { $('#notice-message').textContent = message; $('#notice').hidden = !message; $('#notice').classList.toggle('error', error); }
 async function action(work) { try { return await work(); } catch (error) { notify(error.message, true); } }
 function invalidateResult(system = false) { $(`#${system ? 'system' : 'single'}-result`).textContent = 'Values changed. Solve to update the result.'; scheduleWorksheetSave(); }
@@ -57,7 +63,7 @@ $$('.tab').forEach((tab, index, tabs) => {
 function renderLibrary() {
   const equations = state.library;
   const previousClass = $('#class-filter').value;
-  $('#class-filter').replaceChildren(option('', 'All classes'), ...[...new Set(equations.map(e => e.klass).filter(Boolean))].sort().map(c => option(c, c)));
+  dropdownOptions($('#class-filter'), [option('', 'All classes'), ...[...new Set(equations.map(e => e.klass).filter(Boolean))].sort().map(c => option(c, c))]);
   $('#class-filter').value = [...$('#class-filter').options].some(o => o.value === previousClass) ? previousClass : '';
   const query = $('#search').value.toLowerCase();
   const items = equations.filter(e => (!$('#class-filter').value || e.klass === $('#class-filter').value) && `${e.name} ${e.klass} ${e.formula}`.toLowerCase().includes(query));
@@ -105,7 +111,11 @@ async function renderEquation() {
   $('#equation-sheet').hidden = !eq; $('#equation-empty').hidden = !!eq;
   if (!eq) return;
   $('#eq-name').textContent = eq.name; $('#eq-context').textContent = [subjects[eq.subject], eq.klass].filter(Boolean).join(' / ');
-  $('#solve-for').replaceChildren(...eq.vars.map(v => option(v.key, v.key)));
+  dropdownOptions($('#solve-for'), eq.vars.map(v => {
+    const item = option(v.key, ''); item.setAttribute('aria-label', v.key);
+    const symbol = node('span'); tex(symbol, v.tex || v.key.replace(/_(\w+)/, '_{$1}'));
+    item.append(symbol); return item;
+  }));
   if (!eq.vars.some(v => v.key === state.unknown)) state.unknown = eq.vars[0]?.key || null;
   $('#solve-for').value = state.unknown;
   state.values[eq.id] ||= {};

@@ -18,7 +18,7 @@
   <aside id="library" class="library" aria-label="Equation library">
     <div class="library-head"><span id="library-title" class="library-title">All equations</span><span class="library-count" id="library-count">0</span></div>
     <input class="input" id="search" type="search" aria-label="Search equations" placeholder="Search equations">
-    <select class="select" id="class-filter" aria-label="Filter by class"><option value="">All classes</option></select>
+    <select class="select notebook-select" id="class-filter" aria-label="Filter by class"><option value="">All classes</option></select>
     <ul class="library-list" id="library-list"></ul>
     <p class="library-empty" id="library-empty">No equations here yet.</p>
     <div class="library-footer"><p class="library-note" id="storage-note">Saved on this computer.</p>
@@ -37,7 +37,7 @@
         <p class="crumbs" id="eq-context"></p>
         <div class="title-row"><h1 class="sheet-title" id="eq-name"></h1><button class="btn btn-ghost btn-sm" id="edit">Edit</button><button class="btn btn-ghost btn-sm" id="duplicate">Duplicate</button></div>
         <div class="formula" id="eq-formula" aria-label="Selected equation"></div>
-        <div class="solve-row"><label for="solve-for">Solve for</label><select id="solve-for" class="select"></select><span class="muted solve-hint">Enter the known values below.</span></div>
+        <div class="solve-row"><label for="solve-for">Solve for</label><select id="solve-for" class="select notebook-select math-select"></select><span class="muted solve-hint">Enter the known values below.</span></div>
         <div class="vars" id="var-rows"></div>
         <p class="unit-note muted">Use consistent units. Unit labels do not convert values. Angles are in radians.</p>
         <details class="numerical"><summary>Numerical solving</summary><label><input type="checkbox" id="single-numeric"> Find a root from a starting guess</label><div class="guesses" id="single-guesses"></div><p class="muted">Use when symbolic solving cannot return a value. Other roots may exist.</p></details>
