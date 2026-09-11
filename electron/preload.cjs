@@ -10,5 +10,5 @@ contextBridge.exposeInMainWorld('calculator', {
   load: call('library:load'), save: call('library:save'), remove: call('library:delete'),
   import: call('library:import'), export: call('library:export'),
   copy: call('clipboard:write-text'),
-  inspect: call('equation:inspect'), solve: call('equation:solve'), cancel: call('equation:cancel'),
+  inspect: call('equation:inspect'), preview: call('equation:preview'), solve: call('equation:solve'), cancel: call('equation:cancel'),
 });
