@@ -41,6 +41,9 @@ app.whenReady().then(async () => {
     assert.equal(await run('getComputedStyle(document.querySelector("#class-filter")).appearance'), 'base-select');
     assert.equal(await run('getComputedStyle(document.querySelector("#solve-for")).appearance'), 'base-select');
     assert.equal(await run('document.querySelectorAll("#solve-for option .katex").length'), 3);
+    assert.equal(await run('getComputedStyle(document.querySelector("#slot-0")).appearance'), 'base-select');
+    assert.equal(await run('document.querySelectorAll("#slot-0 option .slot-formula .katex").length'), 3);
+    assert.equal(await run('document.querySelector("#slot-0 option[value=\'1\']").getAttribute("aria-label")'), 'ee equation · Electrical Engineering');
     assert.equal(await run('document.querySelector("#solve-for option[value=I_d] annotation").textContent'), 'I_{d}');
     assert.equal(await run('document.querySelector("#solve-for option[value=V_gs] annotation").textContent'), 'V_{GS}');
     // The formula's LaTeX depends only on the equation, so changing the unknown must not re-inspect or flicker.
