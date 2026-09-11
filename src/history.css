@@ -1,0 +1,78 @@
+/* ---------- History drawer (UI mockup, sample data only) ---------- */
+.history-toggle { display: inline-flex; align-items: center; gap: 8px; }
+.history-toggle[aria-expanded="true"] { background: #f4f3ef; }
+.history-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.history {
+  width: 380px;
+  border-left: 1px solid var(--line);
+  background: var(--paper);
+  padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  overflow: auto;
+}
+.history-head { display: flex; align-items: center; gap: 10px; }
+.history-title { font-family: var(--serif); font-weight: 400; font-size: 20px; letter-spacing: -0.01em; margin: 0 auto 0 0; }
+.history-badge { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--yellow-ink); background: var(--yellow-bg); border-radius: 6px; padding: 2px 7px; }
+.history-note { margin: 0; font-size: 12px; color: var(--muted); }
+.history-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); }
+.history .select { width: 100%; min-width: 0; }
+
+.history-list { display: flex; flex-direction: column; gap: 14px; }
+.history-when { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; margin: 0 0 4px; padding: 0 8px; }
+.history-item { border-bottom: 1px solid var(--line); }
+.history-item:last-child { border-bottom: 0; }
+.history-item summary {
+  list-style: none; cursor: pointer; border-radius: 6px;
+  display: grid; grid-template-columns: 1fr auto; column-gap: 10px;
+  padding: 8px;
+}
+.history-item summary::-webkit-details-marker { display: none; }
+.history-item summary:hover { background: rgba(0,0,0,0.04); }
+.history-item.is-latest summary { background: var(--yellow-bg); }
+.history-name { font-size: 13px; }
+.history-meta { grid-column: 1; font-size: 11px; color: var(--muted); }
+.history-result { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: 13px; white-space: nowrap; }
+.history-known {
+  display: grid; grid-template-columns: max-content 1fr; column-gap: 14px; row-gap: 4px;
+  margin: 4px 0 10px; padding: 0 8px 0 20px;
+  font-family: var(--mono); font-size: 12px;
+}
+.history-known dt { color: var(--muted); }
+.history-known dd { margin: 0; }
+.history-empty { margin: 0; padding: 0 8px; font-size: 12px; color: var(--muted); }
+
+/* Wide screens: the drawer is a third grid column beside the worksheet. */
+@media (min-width: 1101px) {
+  .workspace.history-open { grid-template-columns: 220px minmax(0, 1fr) 380px; }
+  .workspace.sidebar-collapsed.history-open { grid-template-columns: minmax(0, 1fr) 380px; }
+}
+/* Narrow screens: the drawer overlays the worksheet with a dismissable backdrop. */
+@media (max-width: 1100px) {
+  .history { position: fixed; top: 52px; right: 0; bottom: 0; z-index: 3; width: min(380px, calc(100vw - 32px)); box-shadow: -8px 0 24px rgba(31, 31, 29, 0.12); }
+  .history-backdrop { position: fixed; inset: 52px 0 0; z-index: 2; background: rgb(31 31 29 / 30%); }
+}
+
+/* Long formulas and multiple solutions stay inside the approved drawer width. */
+.history-name, .history-meta { min-width: 0; overflow-wrap: anywhere; }
+.history-result { max-width: 160px; overflow-x: auto; overflow-y: hidden; line-height: 2; padding-block: 3px; }
+.history-unit { font-size: 11px; }
+.history-detail { padding: 6px 8px 14px; }
+.history-detail .history-known { padding-left: 12px; }
+.history-known dd { overflow-wrap: anywhere; min-width: 0; }
+.history-formula { font: 12px var(--mono); overflow-wrap: anywhere; padding: 8px 0; margin: 0; }
+.history-equation-name { font-size: 12px; font-weight: 600; margin-bottom: 0; }
+.history-answers { font-size: 12px; padding: 8px 0; }
+.history-answers .answer-row { gap: 8px; overflow-wrap: anywhere; }
+.history-answers .answer-row > span:first-child { max-width: 100%; overflow-x: auto; overflow-y: hidden; line-height: 2; padding-block: 3px; }
+.history-reuse { margin-top: 6px; }
+.history-toggle { white-space: nowrap; }
+.history-toggle:active, .history-reuse:active { transform: scale(.98); }
+@media (max-width: 1100px) {
+  .history { top: 48px; }
+  .history-backdrop { top: 48px; }
+}
+@media (max-width: 900px) {
+  .history { top: 57px; }
+  .history-backdrop { top: 57px; }
+}

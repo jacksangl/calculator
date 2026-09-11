@@ -31,7 +31,7 @@ app.whenReady().then(async () => {
   for (let i = 0; i < 100 && !(win = BrowserWindow.getAllWindows()[0]); i++) await sleep(50);
   assert.ok(win, 'main.cjs did not create a window');
   if (win.webContents.isLoading()) await new Promise(resolve => win.webContents.once('did-finish-load', resolve));
-  const run = code => win.webContents.executeJavaScript(code);
+  const run = code => win.webContents.executeJavaScript(code).catch(error => { console.error('Renderer check failed:', code); throw error; });
   const text = selector => run(`document.querySelector(${JSON.stringify(selector)}).textContent`);
   async function waitFor(code, label, timeout = 20000) {
     const start = Date.now();
@@ -68,7 +68,10 @@ app.whenReady().then(async () => {
   assert.match(await solved('#single-result'), /1 verified solution/);
   assert.deepEqual(await answers('#single-result'), ['6.00000000000 ohm']);
   assert.equal(await run('document.querySelector("#solve-btn").disabled'), false, 'controls re-enable after solving');
-  passed.push('single linear solve (R = V/I = 6 ohm)');
+  await waitFor('document.querySelector("#history-count").textContent === "1"', 'first saved calculation');
+  const historyFile = path.join(dir, 'history.json');
+  assert.equal(JSON.parse(fs.readFileSync(historyFile, 'utf8')).entries[0].request.values.I, '2');
+  passed.push('single linear solve and durable history (R = V/I = 6 ohm)');
 
   // Editing a value invalidates the result; scientific notation and fractions are accepted.
   await type('#var-rows-I', '1/4');
@@ -82,7 +85,8 @@ app.whenReady().then(async () => {
   await type('#var-rows-I', 'abc');
   await click('#solve-btn');
   await waitFor('/finite value for I/.test(document.querySelector("#single-result").textContent)', 'validation message');
-  passed.push('invalid value reports an error in the result box');
+  assert.equal(JSON.parse(fs.readFileSync(historyFile, 'utf8')).entries.length, 2, 'invalid solve is not recorded');
+  passed.push('invalid value reports an error without recording history');
 
   // Nonlinear single equation with two real roots.
   await clickText('.library-item span', 'Square root');
@@ -199,6 +203,87 @@ app.whenReady().then(async () => {
   assert.match(await solved('#system-result'), /2 verified solutions/);
   assert.deepEqual((await answers('#system-result')).sort(), ['0', '0', '0.250000000000', '0.500000000000']);
   passed.push('system with a renamed shared variable (F→x → (x,a) = (0,0) and (1/2,1/4))');
+
+  // History survives a renderer reload, and retains exact inputs and all solution branches.
+  await waitFor('document.querySelector("#history-count").textContent === "9"', 'all successful solves recorded');
+  const archive = JSON.parse(fs.readFileSync(historyFile, 'utf8'));
+  assert.equal(archive.entries.length, 9, 'inconsistent and invalid calculations are excluded');
+  assert.equal(archive.entries[0].mappings[1].F, 'x');
+  assert.equal(archive.entries[0].result.answers.length, 2);
+  assert.ok(archive.entries.some(entry => entry.request.numeric && entry.kind === 'system'));
+  assert.ok(fs.existsSync(historyFile + '.bak'));
+  await new Promise(resolve => { win.webContents.once('did-finish-load', resolve); win.webContents.reload(); });
+  await waitFor('document.querySelector("#history-count").textContent === "9" && document.querySelectorAll(".library-item").length === 5', 'history reload');
+  await click('#history-toggle');
+  assert.equal(await run('document.querySelector("#history").hidden'), false);
+  assert.match(await text('#history-list'), /Today/);
+  await type('#history-filter', 'Circuits');
+  assert.equal(await run('document.querySelectorAll(".history-item").length'), 4);
+  await type('#history-filter', '');
+  await click('.history-item summary');
+  await waitFor('document.querySelector(".history-item .history-reuse")', 'expanded history controls');
+  await click('.history-item .history-reuse');
+  assert.equal(await run('document.querySelector("#history").hidden'), true);
+  assert.equal(await run('document.querySelector("#panel-system").hidden'), false);
+  assert.equal(await run('document.querySelector("#mappings input[aria-label=" + JSON.stringify("Equation 2 shared symbol for F") + "]").value'), 'x');
+  assert.equal(await run('document.querySelector("#system-vars-m").value'), '2');
+  assert.deepEqual((await answers('#system-result')).sort(), ['0', '0', '0.250000000000', '0.500000000000']);
+  assert.equal(JSON.parse(fs.readFileSync(historyFile, 'utf8')).entries.length, 9, 'opening history does not create a duplicate');
+
+  const numerical = archive.entries.find(entry => entry.kind === 'system' && entry.request.numeric);
+  await click('#history-toggle');
+  await run(`document.querySelector('.history-item[data-id="${numerical.id}"]').open = true`);
+  await waitFor(`document.querySelector('.history-item[data-id="${numerical.id}"] .history-reuse')`, 'saved numerical controls');
+  await click(`.history-item[data-id="${numerical.id}"] .history-reuse`);
+  assert.equal(await run('document.querySelector("#system-numeric").checked'), true);
+  assert.deepEqual(await run('[...document.querySelectorAll("#system-guesses input")].map(input => input.value)'), ['1', '1']);
+  assert.match(await text('#system-result'), /numerical root/);
+
+  const fraction = archive.entries.find(entry => entry.kind === 'equation' && entry.request.values.I === '1/4');
+  await click('#history-toggle');
+  await run(`document.querySelector('.history-item[data-id="${fraction.id}"]').open = true`);
+  await waitFor(`document.querySelector('.history-item[data-id="${fraction.id}"] .history-reuse')`, 'saved fraction controls');
+  await click(`.history-item[data-id="${fraction.id}"] .history-reuse`);
+  assert.equal(await run('document.querySelector("#var-rows-I").value'), '1/4');
+  assert.equal(await run('document.querySelector("#solve-for").value'), 'R');
+  assert.deepEqual(await answers('#single-result'), ['48.0000000000 ohm']);
+  passed.push('history reload, class filtering, exact fractions, renamed systems and multiple answers');
+
+  // Narrow drawer acts as a modal; worksheet input and focus are restored on dismissal.
+  win.setContentSize(900, 800);
+  await click('#history-toggle');
+  await waitFor('document.querySelector("#history").getAttribute("aria-modal") === "true"', 'narrow history mode');
+  assert.equal(await run('document.querySelector(".page-wrap").inert'), true);
+  await run('document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))');
+  assert.equal(await run('document.activeElement.id'), 'history-toggle');
+  assert.equal(await run('document.querySelector(".page-wrap").inert'), false);
+  assert.equal(await run('document.querySelector("#var-rows-I").value'), '1/4');
+  win.setContentSize(1320, 920);
+  passed.push('drawer dismissal restores focus and preserves entered values');
+
+  // A broken history file must not hide a successful solve or be silently overwritten.
+  fs.writeFileSync(historyFile, '{broken');
+  await click('#solve-btn');
+  assert.match(await solved('#single-result'), /1 verified solution/);
+  assert.deepEqual(await answers('#single-result'), ['48.0000000000 ohm']);
+  assert.match(await text('#notice-message'), /history could not be saved/);
+  assert.equal(fs.readFileSync(historyFile, 'utf8'), '{broken');
+  await new Promise(resolve => { win.webContents.once('did-finish-load', resolve); win.webContents.reload(); });
+  await waitFor('/Cannot read history/.test(document.querySelector("#history-status").textContent)', 'history read error');
+  fs.writeFileSync(historyFile, JSON.stringify(archive));
+  await click('#history-retry');
+  await waitFor('document.querySelector("#history-count").textContent === "9"', 'history recovery');
+  passed.push('history read/write failures preserve the archive and the current solve result');
+
+  // Changing a library equation leaves the archived snapshot intact and prevents stale reuse.
+  await run('(async () => { state.library = (await api.save({ ...byId("ohm"), formula: "V=2*I*R" })).equations; renderLibrary(); })()');
+  await click('#history-toggle');
+  await run(`document.querySelector('.history-item[data-id="${fraction.id}"]').open = true`);
+  await waitFor(`document.querySelector('.history-item[data-id="${fraction.id}"] .history-detail')`, 'archived equation detail');
+  assert.equal(await run(`!!document.querySelector('.history-item[data-id="${fraction.id}"] .history-reuse')`), false);
+  assert.match(await text(`.history-item[data-id="${fraction.id}"]`), /Equation changed or removed/);
+  assert.equal(JSON.parse(fs.readFileSync(historyFile, 'utf8')).entries.find(entry => entry.id === fraction.id).equations[0].formula, 'V = I*R');
+  passed.push('archived equations remain readable after library edits');
 
   console.log('App end-to-end passed:\n' + passed.map(x => '  ✔ ' + x).join('\n'));
 }).then(() => app.exit(0)).catch(error => { console.error(error); app.exit(1); }).finally(() => fs.rmSync(dir, { recursive: true, force: true }));
