@@ -92,6 +92,14 @@ The library starts empty. No example equations are installed.
 
 Units are descriptive labels in this version. Supply mutually consistent units; the app does not convert or dimension-check them. Trigonometric inputs use radians.
 
+## Calculation history
+
+Click **History** in the top-right corner to open the drawer. Successful single-equation and system calculations are saved automatically, including exact input strings, unknowns, numerical guesses, equation snapshots and every returned solution. Entries are grouped by date and can be filtered by class. Expand an entry to see its inputs, copy its answers, or **Use these values** to reopen the calculation without adding another history entry.
+
+History keeps the latest 500 successful calculations across restarts in `history.json`, alongside `library.json`, with a `history.json.bak` backup. Failed, cancelled and no-solution calculations are not recorded. If history cannot be saved, the current result still appears with an error notice. An edited or deleted equation's previous calculations remain readable; reusing their inputs is available while the equation's formula and variable metadata still match.
+
+History is separate from the equation library and is not included in library imports or exports. Calculations made before this feature was installed are not recoverable.
+
 ## Systems
 
 Select two to eight equations. Matching variable names are shared by default. Expand **Shared variables** to rename symbols that represent different quantities. Shared variables must have matching unit labels and domains. Select unknowns and enter the remaining values.

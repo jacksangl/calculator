@@ -3,12 +3,14 @@ const path = require('node:path');
 const fs = require('node:fs/promises');
 const { pathToFileURL } = require('node:url');
 const { SolverWorker } = require('./bridge.cjs');
+const { snapshot, readHistory, appendHistory } = require('./history.cjs');
 const { readLibrary, writeLibrary, validateEquation, validateLibrary } = require('./library.cjs');
 let window, active, inspecting;
 if (!app.isPackaged && process.env.JOTTER_DATA_DIR) app.setPath('userData', path.resolve(process.env.JOTTER_DATA_DIR));
 const page = pathToFileURL(path.join(__dirname, '../src/index.html')).href;
 const worker = new SolverWorker({ resources: app.isPackaged ? process.resourcesPath : undefined });
 const solver = (request, options = {}) => worker.request(request, options);
+const historyPath = () => path.join(app.getPath('userData'), 'history.json');
 const libraryPath = () => path.join(app.getPath('userData'), 'library.json');
 function migrateLegacyLibrary() {
   // ponytail: one-time copy from the pre-Jotter "Class Equations" data dir; delete this once nobody is upgrading from 0.1.0.
@@ -43,6 +45,7 @@ handle('equation:menu', () => new Promise(resolve => {
     { label: 'Delete', click: () => resolve('delete') },
   ]).popup({ window, callback: () => setImmediate(() => resolve(null)) });
 }));
+handle('history:load', async () => { await writes; return readHistory(historyPath()); });
 handle('library:load', async () => { await writes; return readLibrary(libraryPath()); });
 handle('library:save', input => mutate(async () => {
   const equation = await checkedEquation(input);
@@ -99,7 +102,15 @@ handle('equation:inspect', async input => {
 handle('equation:solve', async input => {
   if (active) throw new Error('A calculation is already running.');
   const controller = active = new AbortController();
-  try { return await solver({ ...input, operation: 'solve' }, { signal: controller.signal }); }
+  try {
+    const saved = input.history ? snapshot(input) : null;
+    const result = await solver({ ...(saved ? saved.request : input), operation: 'solve' }, { signal: controller.signal });
+    if (saved && result.status === 'solved' && !controller.signal.aborted) {
+      try { result.historyEntry = await mutate(() => appendHistory(historyPath(), saved, result)); }
+      catch (error) { result.historyError = `Calculation complete, but history could not be saved. ${error.message}`; }
+    }
+    return result;
+  }
   finally { if (active === controller) active = null; }
 });
 handle('equation:cancel', () => { active?.abort(); return true; });

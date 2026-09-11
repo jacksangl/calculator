@@ -312,8 +312,12 @@ async function solve(system) {
     // Keep the equation and input snapshot stable while its result is being computed.
     $$('input, select, textarea, .library-item, .tab, [data-new], #edit, #duplicate, #clear-values, #add-slot, #import, #export').forEach(e => e.disabled = true);
     resultBox.textContent = 'Solving…';
-    const result = await api.solve({ equations: data.equations, metadata: metadata(data.vars), unknowns, values, guesses, numeric: $(`#${prefix}-numeric`).checked });
+    const selectedSlots = system ? state.slots.map((id, index) => ({ equation: byId(id), mapping: state.mappings[index] || {} })).filter(slot => slot.equation) : [{ equation: eq, mapping: {} }];
+    const result = await api.solve({ equations: data.equations, metadata: metadata(data.vars), unknowns, values, guesses, numeric: $(`#${prefix}-numeric`).checked,
+      history: { kind: system ? 'system' : 'equation', equations: selectedSlots.map(slot => slot.equation), mappings: selectedSlots.map(slot => slot.mapping) } });
     showResult(resultBox, result, data.vars);
+    if (result.historyEntry) calculationHistory.add(result.historyEntry);
+    if (result.historyError) notify(result.historyError, true);
   } catch (error) { resultBox.textContent = error.message; }
   finally {
     state.busy = false; $$('input, select, textarea, button').forEach(e => e.disabled = false);
