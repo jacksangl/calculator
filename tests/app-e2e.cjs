@@ -58,6 +58,13 @@ app.whenReady().then(async () => {
   await waitFor('document.querySelector("#eq-formula .katex")', 'KaTeX render of the inspected formula');
   passed.push('library load + inspect');
 
+  // Hovering a library item renders its formula preview through the real preview channel.
+  await run('[...document.querySelectorAll(".library-item")].find(e => e.textContent.includes("Square root")).dispatchEvent(new MouseEvent("mouseenter"))');
+  await waitFor('!document.querySelector("#eq-preview").hidden && document.querySelector("#eq-preview annotation")?.textContent.includes("x^{2}")', 'hover formula preview');
+  await run('[...document.querySelectorAll(".library-item")].find(e => e.textContent.includes("Square root")).dispatchEvent(new MouseEvent("mouseleave"))');
+  assert.equal(await run('document.querySelector("#eq-preview").hidden'), true);
+  passed.push('hover preview');
+
   // Single equation: V = I*R, solve for R with V = 12, I = 2.
   await clickText('.library-item span', "Ohm's law");
   await waitFor('document.querySelector("#eq-name").textContent === "Ohm\'s law"', "Ohm's law selection");

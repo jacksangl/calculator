@@ -78,9 +78,32 @@ function renderLibrary() {
     button.addEventListener('keydown', event => {
       if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) { event.preventDefault(); equationMenu(eq); }
     });
-    button.addEventListener('click', () => selectEquation(eq)); li.append(button); return li;
+    button.addEventListener('mouseenter', () => showPreview(eq, button));
+    button.addEventListener('mouseleave', hidePreview);
+    button.addEventListener('click', () => { hidePreview(); selectEquation(eq); }); li.append(button); return li;
   }));
 }
+// Small formula preview beside a hovered library item. It shares the LaTeX cache below and fills any
+// miss through the preview channel, which never cancels the sheet's or editor's inspect.
+let previewTarget = null, previewDelay;
+const previewLatex = eq => formulaLatex(eq, api.preview || api.inspect);
+function showPreview(eq, anchor) {
+  hidePreview(); previewTarget = anchor;
+  previewDelay = setTimeout(async () => {
+    let latex;
+    try { latex = await previewLatex(eq); } catch { return; }
+    if (previewTarget !== anchor || !anchor.isConnected) return;
+    const preview = $('#eq-preview');
+    tex(preview, latex); preview.hidden = false;
+    // Sit just right of the sidebar, clamped to the window, so it never covers the list or the sheet's controls.
+    const rect = anchor.getBoundingClientRect(), box = preview.getBoundingClientRect(), edge = $('#library').getBoundingClientRect().right;
+    preview.style.left = `${Math.min(edge + 8, window.innerWidth - box.width - 8)}px`;
+    preview.style.top = `${Math.max(8, Math.min(rect.top + (rect.height - box.height) / 2, window.innerHeight - box.height - 8))}px`;
+  }, 200);
+}
+function hidePreview() { clearTimeout(previewDelay); previewTarget = null; $('#eq-preview').hidden = true; }
+$('#library-list').addEventListener('scroll', hidePreview);
+window.addEventListener('blur', hidePreview);
 function selectEquation(eq) {
   state.selected = eq?.id || null; state.unknown = eq?.vars[0]?.key || null;
   renderLibrary(); renderEquation(); showTab('equation');
@@ -114,11 +137,11 @@ function inspect(input) {
   lastInspect = pending.catch(() => {});
   return pending;
 }
-function formulaLatex(eq) {
+function formulaLatex(eq, fetch = inspect) {
   const key = latexKey(eq);
   if (latexCache.has(key)) return Promise.resolve(latexCache.get(key));
   if (!latexPending.has(key)) {
-    const pending = inspect({ equations: [eq.formula], metadata: metadata(eq.vars) })
+    const pending = fetch({ equations: [eq.formula], metadata: metadata(eq.vars) })
       .then(inspected => { latexCache.set(key, inspected.latex[0]); return inspected.latex[0]; })
       .finally(() => latexPending.delete(key));
     latexPending.set(key, pending);

@@ -21,6 +21,7 @@ app.whenReady().then(async () => {
         load: async () => ({ equations }),
         inspect: async () => { inspections += 1; return { latex: ['x=1'], variables: [{ key: 'x' }] }; },
         inspections: () => inspections,
+        preview: async () => ({ latex: ['x=1'], variables: [{ key: 'x' }] }),
         equationMenu: async () => { const result = choice; choice = 'delete'; return result; },
         save: async eq => { equations = equations.map(e => e.id === eq.id ? eq : e); return { equations }; },
         remove: async id => { equations = equations.filter(e => e.id !== id); return { equations }; },
@@ -69,6 +70,19 @@ app.whenReady().then(async () => {
     assert.equal(await run('document.querySelectorAll(".library-item")[1].click(); !!document.querySelector("#eq-formula .katex")'), true);
     assert.equal(await run('document.querySelectorAll(".library-item")[0].click(); !!document.querySelector("#eq-formula .katex")'), true);
     assert.equal(await run('window.calculator.inspections()'), inspections);
+    await run('document.querySelector(".library-item").dispatchEvent(new MouseEvent("mouseenter"))');
+    assert.equal(await run('document.querySelector("#eq-preview").hidden'), true);
+    await run('new Promise(resolve => setTimeout(resolve, 300))');
+    assert.equal(await run('document.querySelector("#eq-preview").hidden'), false);
+    assert.equal(await run('document.querySelector("#eq-preview annotation").textContent'), 'x=1');
+    assert.equal(await run('getComputedStyle(document.querySelector("#eq-preview")).pointerEvents'), 'none');
+    assert.equal(await run('(() => { const p = document.querySelector("#eq-preview").getBoundingClientRect(), l = document.querySelector("#library").getBoundingClientRect(); return p.left >= l.right && p.right <= innerWidth && p.height < 60; })()'), true);
+    await run('document.querySelector(".library-item").dispatchEvent(new MouseEvent("mouseleave"))');
+    assert.equal(await run('document.querySelector("#eq-preview").hidden'), true);
+    await run('document.querySelector(".library-item").dispatchEvent(new MouseEvent("mouseenter"))');
+    await run('document.querySelector(".library-item").click()');
+    await run('new Promise(resolve => setTimeout(resolve, 300))');
+    assert.equal(await run('document.querySelector("#eq-preview").hidden'), true);
     await run('document.querySelector("#class-filter").value = "ee class"; document.querySelector("#class-filter").dispatchEvent(new Event("change"))');
     assert.equal(await run('document.querySelector(".library-item").textContent'), 'ee equationee class');
     assert.equal(await run('document.querySelector("#class-filter selectedcontent").textContent'), 'ee class');
@@ -113,7 +127,7 @@ app.whenReady().then(async () => {
     await run('document.querySelector("#ai-import-dialog form button").click()');
     assert.equal(await run('document.querySelector("#ai-import-dialog").open'), false);
     assert.equal(await run('document.activeElement.id'), 'ai-import');
-    console.log('UI smoke passed: LaTeX dropdowns, keyboard selection and dismissal, library controls, AI import dialog, copy success/failure, prompt schema, modal shortcuts and focus.');
+    console.log('UI smoke passed: LaTeX dropdowns, hover formula preview, keyboard selection and dismissal, library controls, AI import dialog, copy success/failure, prompt schema, modal shortcuts and focus.');
   } finally {
     win?.destroy();
     await fs.rm(dir, { recursive: true, force: true });

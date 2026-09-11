@@ -99,6 +99,8 @@ handle('equation:inspect', async input => {
   try { return await solver({ ...input, operation: 'inspect' }, { signal: controller.signal, timeout: 5000 }); }
   finally { if (inspecting === controller) inspecting = null; }
 });
+// Hover previews share the serial worker but never cancel the sheet's or editor's inspect.
+handle('equation:preview', input => solver({ ...input, operation: 'inspect' }, { timeout: 5000 }));
 handle('equation:solve', async input => {
   if (active) throw new Error('A calculation is already running.');
   const controller = active = new AbortController();
