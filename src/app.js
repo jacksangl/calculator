@@ -104,32 +104,77 @@ function variableRows(container, vars, unknowns, values, changed) {
     row.append(symbol, equals, cell, node('div', 'var-meta', [v.unit, v.desc].filter(Boolean).join(' · '))); return row;
   }));
 }
+// LaTeX for an equation depends only on its formula and variable metadata, never on the chosen unknown,
+// so it is inspected once, cached by content and rendered synchronously on later visits.
+const latexCache = new Map(), latexPending = new Map();
+const latexKey = eq => JSON.stringify([eq.formula, eq.vars.map(v => [v.key, v.tex || ''])]);
+let lastInspect = Promise.resolve();
+function inspect(input) {
+  const pending = api.inspect(input);
+  lastInspect = pending.catch(() => {});
+  return pending;
+}
+function formulaLatex(eq) {
+  const key = latexKey(eq);
+  if (latexCache.has(key)) return Promise.resolve(latexCache.get(key));
+  if (!latexPending.has(key)) {
+    const pending = inspect({ equations: [eq.formula], metadata: metadata(eq.vars) })
+      .then(inspected => { latexCache.set(key, inspected.latex[0]); return inspected.latex[0]; })
+      .finally(() => latexPending.delete(key));
+    latexPending.set(key, pending);
+  }
+  return latexPending.get(key);
+}
 let equationRender = 0;
-async function renderEquation() {
+function renderFormula(eq) {
+  const version = ++equationRender, cached = latexCache.get(latexKey(eq));
+  if (cached !== undefined) { tex($('#eq-formula'), cached, true); return; }
+  $('#eq-formula').textContent = eq.formula;
+  formulaLatex(eq)
+    .then(latex => { if (version === equationRender) tex($('#eq-formula'), latex, true); })
+    .catch(error => { if (version === equationRender) notify(error.message, true); });
+}
+// Warm the cache in the background so the first visit to each equation renders LaTeX immediately.
+// The main process cancels an in-flight inspect when a new one starts, so wait for any active inspect first.
+let warming = false;
+async function warmLatexCache() {
+  if (warming || !api) return;
+  warming = true;
+  try {
+    for (const eq of [...state.library]) {
+      if (latexCache.has(latexKey(eq))) continue;
+      await lastInspect;
+      if (!byId(eq.id)) continue;
+      try { await formulaLatex(eq); } catch { /* Left uncached; the next selection fetches it. */ }
+    }
+  } finally { warming = false; }
+}
+function renderUnknown() {
   scheduleWorksheetSave();
-  const eq = byId(state.selected), version = ++equationRender;
-  $('#equation-sheet').hidden = !eq; $('#equation-empty').hidden = !!eq;
+  const eq = byId(state.selected);
   if (!eq) return;
-  $('#eq-name').textContent = eq.name; $('#eq-context').textContent = [subjects[eq.subject], eq.klass].filter(Boolean).join(' / ');
-  dropdownOptions($('#solve-for'), eq.vars.map(v => {
-    const item = option(v.key, ''); item.setAttribute('aria-label', v.key);
-    const symbol = node('span'); tex(symbol, v.tex || v.key.replace(/_(\w+)/, '_{$1}'));
-    item.append(symbol); return item;
-  }));
   if (!eq.vars.some(v => v.key === state.unknown)) state.unknown = eq.vars[0]?.key || null;
   $('#solve-for').value = state.unknown;
   state.values[eq.id] ||= {};
   variableRows($('#var-rows'), eq.vars, new Set([state.unknown]), state.values[eq.id], () => invalidateResult());
   $('#single-result').textContent = 'Choose an unknown and enter the known values.';
   renderGuesses(false);
-  $('#eq-formula').textContent = eq.formula;
-  try {
-    const inspected = await api.inspect({ equations: [eq.formula], metadata: metadata(eq.vars) });
-    if (version === equationRender) tex($('#eq-formula'), inspected.latex[0], true);
-  } catch (error) { if (version === equationRender) notify(error.message, true); }
 }
-$('#solve-for').addEventListener('change', () => { state.unknown = $('#solve-for').value; renderEquation(); });
-$('#clear-values').addEventListener('click', () => { if (state.selected) state.values[state.selected] = {}; renderEquation(); });
+function renderEquation() {
+  const eq = byId(state.selected);
+  $('#equation-sheet').hidden = !eq; $('#equation-empty').hidden = !!eq;
+  if (!eq) { scheduleWorksheetSave(); return; }
+  $('#eq-name').textContent = eq.name; $('#eq-context').textContent = [subjects[eq.subject], eq.klass].filter(Boolean).join(' / ');
+  dropdownOptions($('#solve-for'), eq.vars.map(v => {
+    const item = option(v.key, ''); item.setAttribute('aria-label', v.key);
+    const symbol = node('span'); tex(symbol, v.tex || v.key.replace(/_(\w+)/, '_{$1}'));
+    item.append(symbol); return item;
+  }));
+  renderUnknown();
+  renderFormula(eq);
+}
+$('#solve-for').addEventListener('change', () => { state.unknown = $('#solve-for').value; renderUnknown(); });
+$('#clear-values').addEventListener('click', () => { if (state.selected) state.values[state.selected] = {}; renderUnknown(); });
 
 let previewTimer;
 function captureEditorVars() {
@@ -168,7 +213,7 @@ async function previewEquation() {
   if (!formula) { $('#ed-preview').textContent = 'Your formatted equation will appear here.'; renderEditorVars([]); return null; }
   const existing = metadata(captureEditorVars());
   try {
-    const inspected = await api.inspect({ equations: [formula], metadata: existing });
+    const inspected = await inspect({ equations: [formula], metadata: existing });
     if (version !== state.previewVersion) return null;
     state.editorVars = inspected.variables.map(v => ({ ...v, unit: '', desc: '', domain: 'real', ...existing[v.key] }));
     renderEditorVars(state.editorVars); tex($('#ed-preview'), inspected.latex[0], true);
@@ -368,7 +413,7 @@ $('#solve-system').addEventListener('click', () => solve(true));
 $$('[data-cancel]').forEach(button => button.addEventListener('click', () => action(() => api.cancel())));
 $('#import').addEventListener('click', () => action(async () => {
   $('#import').disabled = true;
-  try { const library = await api.import(); if (library) { state.library = library.equations; renderLibrary(); renderSlots(); notify('Library imported. Existing equations were kept.'); } }
+  try { const library = await api.import(); if (library) { state.library = library.equations; renderLibrary(); renderSlots(); warmLatexCache(); notify('Library imported. Existing equations were kept.'); } }
   finally { $('#import').disabled = false; }
 }));
 $('#export').addEventListener('click', () => action(async () => { if (await api.export()) notify('Library exported.'); }));
@@ -421,4 +466,5 @@ action(async () => {
   }
   worksheetReady = true;
   scheduleWorksheetSave();
+  warmLatexCache();
 });

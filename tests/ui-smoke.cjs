@@ -16,10 +16,11 @@ app.whenReady().then(async () => {
     await fs.writeFile(preload, `
       const { contextBridge } = require('electron');
       let equations = ['math', 'ee', 'cs'].map((subject, index) => ({ id: String(index), name: subject + ' equation', subject, klass: subject + ' class', formula: 'x=I_d+V_gs', vars: [{ key: 'x' }, { key: 'I_d' }, { key: 'V_gs', tex: 'V_{GS}' }] }));
-      let choice = 'rename';
+      let choice = 'rename', inspections = 0;
       contextBridge.exposeInMainWorld('calculator', {
         load: async () => ({ equations }),
-        inspect: async () => ({ latex: ['x=1'], variables: [{ key: 'x' }] }),
+        inspect: async () => { inspections += 1; return { latex: ['x=1'], variables: [{ key: 'x' }] }; },
+        inspections: () => inspections,
         equationMenu: async () => { const result = choice; choice = 'delete'; return result; },
         save: async eq => { equations = equations.map(e => e.id === eq.id ? eq : e); return { equations }; },
         remove: async id => { equations = equations.filter(e => e.id !== id); return { equations }; },
@@ -41,9 +42,14 @@ app.whenReady().then(async () => {
     assert.equal(await run('document.querySelectorAll("#solve-for option .katex").length'), 3);
     assert.equal(await run('document.querySelector("#solve-for option[value=I_d] annotation").textContent'), 'I_{d}');
     assert.equal(await run('document.querySelector("#solve-for option[value=V_gs] annotation").textContent'), 'V_{GS}');
+    // The formula's LaTeX depends only on the equation, so changing the unknown must not re-inspect or flicker.
+    assert.equal(await run('!!document.querySelector("#eq-formula .katex")'), true);
+    const inspections = await run('window.calculator.inspections()');
     await run('document.querySelector("#solve-for").value = "V_gs"; document.querySelector("#solve-for").dispatchEvent(new Event("change"))');
     assert.equal(await run('document.querySelector("#solve-for selectedcontent annotation").textContent'), 'V_{GS}');
     assert.equal(await run('!!document.querySelector("#var-rows-I_d") && !document.querySelector("#var-rows-V_gs")'), true);
+    assert.equal(await run('!!document.querySelector("#eq-formula .katex")'), true);
+    assert.equal(await run('window.calculator.inspections()'), inspections);
     await win.webContents.executeJavaScript('document.querySelector("#solve-for").focus(); document.querySelector("#solve-for").showPicker()', true);
     assert.equal(await run('document.querySelector("#solve-for").matches(":open")'), true);
     win.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'ESCAPE' });
@@ -59,6 +65,10 @@ app.whenReady().then(async () => {
     await tick();
     assert.equal(await run('document.querySelector("#solve-for").value'), 'I_d');
     assert.equal(await run('document.querySelector("#solve-for selectedcontent annotation").textContent'), 'I_{d}');
+    // Switching equations renders cached LaTeX synchronously; the plain formula never shows in between.
+    assert.equal(await run('document.querySelectorAll(".library-item")[1].click(); !!document.querySelector("#eq-formula .katex")'), true);
+    assert.equal(await run('document.querySelectorAll(".library-item")[0].click(); !!document.querySelector("#eq-formula .katex")'), true);
+    assert.equal(await run('window.calculator.inspections()'), inspections);
     await run('document.querySelector("#class-filter").value = "ee class"; document.querySelector("#class-filter").dispatchEvent(new Event("change"))');
     assert.equal(await run('document.querySelector(".library-item").textContent'), 'ee equationee class');
     assert.equal(await run('document.querySelector("#class-filter selectedcontent").textContent'), 'ee class');
