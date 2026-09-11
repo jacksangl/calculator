@@ -10,6 +10,9 @@ function run(command, args) {
 }
 if (process.argv[2] === 'setup') {
   if (!existsSync(python)) run(process.platform === 'win32' ? 'python' : 'python3', ['-m', 'venv', '.venv']);
+  if (spawnSync(python, ['-m', 'pip', '--version'], { stdio: 'ignore' }).status !== 0) {
+    run(python, ['-m', 'ensurepip', '--upgrade']);
+  }
   run(python, ['-m', 'pip', 'install', '-r', 'requirements.txt']);
 } else {
   if (!existsSync(python)) throw new Error('Run npm run setup:solver first.');
